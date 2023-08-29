@@ -1,3 +1,5 @@
+import random
+
 from settings import *
 from sprites import *
 import pygame as pg
@@ -25,26 +27,17 @@ class Game:
 #  en lugar de ir dibujando una pared por una.
     def new(self):
         self.all_sprites = pg.sprite.Group()
-        self.player = Player(self, 1, 7)
+        self.player = Player(self, 1, 1)
+        self.goal = Goal(self, random.randrange(0,14), random.randrange(0, 14))
         self.walls = pg.sprite.Group()
         for x in range(0, 16):
-            Wall(self, x, 0)
-            Wall(self, x, 15)
-        for y in range(0, 16):
-            Wall(self, 0, y)
-            Wall(self, 15, y)
-        for x in range(3, 7):
-            Wall(self, x, 3)
-            Wall(self, x, 12)
-        for y in range(3, 7):
-            Wall(self, 3, y)
-            Wall(self, 12, y)
-        for x in range(9, 13):
-            Wall(self, x, 3)
-            Wall(self, x, 12)
-        for y in range(9, 13):
-            Wall(self, 3, y)
-            Wall(self, 12, y)
+            for y in range(0, 16):
+                rand = random.randrange(0, 10)
+                if rand > 7:
+                    if not (x == self.player.x and y == self.player.y) and not (x == self.goal.x and y == self.goal.y ):
+                        Wall(self, x, y)
+
+
 
 #  run es lo que ejecuta o permite crear el tiempo y así
 #  poder tener un movimiento o animación, donde traza
@@ -90,16 +83,26 @@ class Game:
                 self.quit()
             #  Para la IA se desactivaría de aquí...
             if event.type == pg.KEYDOWN:
+                if event.key == pg.K_r:
+                    self.new()
                 if event.key == pg.K_ESCAPE:
                     self.quit()
                 if event.key == pg.K_LEFT:
                     self.player.move(dx = -1)
+                    self.player.image = pg.image.load("resources/sprites/kirbySpriteL.png")
+                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
                 if event.key == pg.K_RIGHT:
                     self.player.move(dx = 1)
+                    self.player.image = pg.image.load("resources/sprites/kirbySpriteR.png")
+                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
                 if event.key == pg.K_UP:
                     self.player.move(dy = -1)
                 if event.key == pg.K_DOWN:
                     self.player.move(dy = 1)
+                if self.player.x == self.goal.x and self.player.y == self.goal.y:
+                    self.player.image = pg.image.load("resources/sprites/victoryKirby.png")
+                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
+                    self.goal.image = pg.image.load("resources/sprites/Empty.png")
             #  hasta aqui...
 
 #  Pantalla de inicio, aun no tiene nada.
