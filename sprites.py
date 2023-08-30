@@ -56,7 +56,7 @@ class Wall(pg.sprite.Sprite):
         self.rect.x = x * TITLESIZE
         self.rect.y = y * TITLESIZE
 
-class Goal(pg.sprite.Sprite):
+class Goal(pg.sprite.Sprite): #Ajustar clase a clase Poderes y hacerle modificaciones
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
@@ -64,23 +64,6 @@ class Goal(pg.sprite.Sprite):
         #self.image = pg.Surface((TITLESIZE, TITLESIZE))
         #self.image.fill(BLUE)
         self.image = pg.image.load("resources/sprites/goal.png")
-        self.image = pg.transform.scale(self.image, (64, 64))
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-
-    def update(self):
-        self.rect.x = self.x * TITLESIZE
-        self.rect.y = self.y * TITLESIZE
-
-class Finished(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        #self.image = pg.Surface((TITLESIZE, TITLESIZE))
-        #self.image.fill(BLUE)
-        self.image = pg.image.load("resources/sprites/victoryKirby.png")
         self.image = pg.transform.scale(self.image, (64, 64))
         self.rect = self.image.get_rect()
         self.x = x

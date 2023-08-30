@@ -28,13 +28,17 @@ class Game:
     def new(self):
         self.all_sprites = pg.sprite.Group()
         self.player = Player(self, 1, 1)
-        self.goal = Goal(self, random.randrange(0,14), random.randrange(0, 14))
+        self.goals = []
+        for _ in range(random.randrange(4,12)):
+            goal = Goal(self, random.randrange(0,14), random.randrange(0, 14))
+            self.goals.append(goal)
+        #self.goal = Goal(self, random.randrange(0,14), random.randrange(0, 14))
         self.walls = pg.sprite.Group()
         for x in range(0, 16):
             for y in range(0, 16):
                 rand = random.randrange(0, 10)
                 if rand > 7:
-                    if not (x == self.player.x and y == self.player.y) and not (x == self.goal.x and y == self.goal.y ):
+                    if not (x == self.player.x and y == self.player.y) and not any(goal.x == x and goal.y == y for goal in self.goals):
                         Wall(self, x, y)
 
 
@@ -99,10 +103,11 @@ class Game:
                     self.player.move(dy = -1)
                 if event.key == pg.K_DOWN:
                     self.player.move(dy = 1)
-                if self.player.x == self.goal.x and self.player.y == self.goal.y:
-                    self.player.image = pg.image.load("resources/sprites/victoryKirby.png")
-                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
-                    self.goal.image = pg.image.load("resources/sprites/Empty.png")
+                for goal in self.goals:
+                    if self.player.x == goal.x and self.player.y == goal.y:
+                        self.player.image = pg.image.load("resources/sprites/victoryKirby.png")
+                        self.player.image = pg.transform.scale(self.player.image, (64, 64))
+                        goal.kill()  #Alternativa a eliminar una imagen
             #  hasta aqui...
 
 #  Pantalla de inicio, aun no tiene nada.
