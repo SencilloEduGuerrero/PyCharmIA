@@ -1,3 +1,4 @@
+import random
 import pygame as pg
 from settings import *
 
@@ -9,9 +10,7 @@ class Player(pg.sprite.Sprite):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        #self.image = pg.Surface((TITLESIZE, TITLESIZE))
-        #self.image.fill(BLUE)
-        self.image = pg.image.load("resources/sprites/kirbySpriteR.png")
+        self.image = pg.image.load("resources/sprites/kirbySpriteD.png")
         self.image = pg.transform.scale(self.image, (64, 64))
         self.rect = self.image.get_rect()
         self.x = x
@@ -49,7 +48,8 @@ class Wall(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TITLESIZE, TITLESIZE))
-        self.image.fill(GREEN)
+        self.image = pg.image.load("resources/sprites/wallSprite.png")
+        self.image = pg.transform.scale(self.image, (64, 64))
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -61,9 +61,48 @@ class Goal(pg.sprite.Sprite): #Ajustar clase a clase Poderes y hacerle modificac
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        #self.image = pg.Surface((TITLESIZE, TITLESIZE))
-        #self.image.fill(BLUE)
         self.image = pg.image.load("resources/sprites/goal.png")
+        self.image = pg.transform.scale(self.image, (64, 64))
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+
+    def update(self):
+        self.rect.x = self.x * TITLESIZE
+        self.rect.y = self.y * TITLESIZE
+
+# Aun no esta terminado u _ u
+class Food(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.image.load("resources/sprites/food.png")
+        self.image = pg.transform.scale(self.image, (64, 64))
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+
+class Enemy(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.enemy
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+
+        rand = random.randrange(0, 2)
+
+        match rand:
+            case 0:
+                self.image = pg.image.load("resources/sprites/fireEnemyD.png")
+            case 1:
+                self.image = pg.image.load("resources/sprites/iceEnemyD.png")
+            #case 2:
+            #    self.image = pg.image.load("resources/sprites/thunderEnemyD.png")
+            #case 3:
+            #    self.image = pg.image.load("resources/sprites/windEnemyD.png")
+            #case 4:
+            #    self.image = pg.image.load("resources/sprites/swordEnemyD.png")
+
         self.image = pg.transform.scale(self.image, (64, 64))
         self.rect = self.image.get_rect()
         self.x = x

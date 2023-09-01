@@ -32,7 +32,6 @@ class Game:
         for _ in range(random.randrange(4,12)):
             goal = Goal(self, random.randrange(0,14), random.randrange(0, 14))
             self.goals.append(goal)
-        #self.goal = Goal(self, random.randrange(0,14), random.randrange(0, 14))
         self.walls = pg.sprite.Group()
         for x in range(0, 16):
             for y in range(0, 16):
@@ -40,8 +39,8 @@ class Game:
                 if rand > 7:
                     if not (x == self.player.x and y == self.player.y) and not any(goal.x == x and goal.y == y for goal in self.goals):
                         Wall(self, x, y)
-
-
+        self.enemy = pg.sprite.Group()
+        self.enemy = Enemy(self, 5, 5)
 
 #  run es lo que ejecuta o permite crear el tiempo y así
 #  poder tener un movimiento o animación, donde traza
@@ -74,7 +73,7 @@ class Game:
 #  Dibuja el fondo, las columnas y filas, y también los sprites que se dibujarán.
 #  display.flip actualiza y verifica, se ubica al final.
     def draw(self):
-        self.screen.fill(BLACK)
+        self.screen.blit(BGCOLOR, (0, 0))
         self.draw_grid()
         self.all_sprites.draw(self.screen)
         pg.display.flip()
@@ -101,8 +100,12 @@ class Game:
                     self.player.image = pg.transform.scale(self.player.image, (64, 64))
                 if event.key == pg.K_UP:
                     self.player.move(dy = -1)
+                    self.player.image = pg.image.load("resources/sprites/kirbySpriteU.png")
+                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
                 if event.key == pg.K_DOWN:
                     self.player.move(dy = 1)
+                    self.player.image = pg.image.load("resources/sprites/kirbySpriteD.png")
+                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
                 for goal in self.goals:
                     if self.player.x == goal.x and self.player.y == goal.y:
                         self.player.image = pg.image.load("resources/sprites/victoryKirby.png")

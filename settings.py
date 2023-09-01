@@ -1,4 +1,6 @@
 #  Colores
+import pygame.image
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 DARKGREY = (40, 40, 40)
@@ -11,9 +13,11 @@ YELLOW = (255, 255, 0)
 #  Ajustes del Juego
 WIDTH = 1024    #  16 * 64 o 32 * 32 o 64 * 16
 HEIGHT = 1024    #  16 * 48 o 32 * 24 o 64 * 12
+SCREENSIZE = (WIDTH, HEIGHT)
 FPS = 60
 TITLE = "Mapa Test"
-BGCOLOR = DARKGREY
+BGCOLOR = pygame.image.load("resources/sprites/background.png")
+BGCOLOR = pygame.transform.scale(BGCOLOR, SCREENSIZE)
 
 #  Tamaño de los espacios y de las columnas y renglones.
 TITLESIZE = 64
