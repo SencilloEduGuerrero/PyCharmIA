@@ -56,7 +56,7 @@ class Wall(pg.sprite.Sprite):
         self.rect.x = x * TITLESIZE
         self.rect.y = y * TITLESIZE
 
-class Goal(pg.sprite.Sprite): #Ajustar clase a clase Poderes y hacerle modificaciones
+class Goal(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
@@ -66,15 +66,23 @@ class Goal(pg.sprite.Sprite): #Ajustar clase a clase Poderes y hacerle modificac
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
+        self.visited = False
 
     def update(self):
         self.rect.x = self.x * TITLESIZE
         self.rect.y = self.y * TITLESIZE
 
+    def player_visited(self, player):
+        if not self.visited:
+            player.image = pg.image.load("resources/sprites/victoryKirby.png")
+            player.image = pg.transform.scale(player.image, (64, 64))
+            self.visited = True
+            self.kill()
+
 # Aun no esta terminado u _ u
 class Food(pg.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites
+        self.groups = game.all_sprites, game.food  # Assuming you have a sprite group for food
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.image.load("resources/sprites/food.png")
@@ -83,25 +91,33 @@ class Food(pg.sprite.Sprite):
         self.x = x
         self.y = y
 
+    def update(self):
+        self.rect.x = self.x * TITLESIZE
+        self.rect.y = self.y * TITLESIZE
+
+    def player_visited(self, player):
+        if self.x == player.x and self.y == player.y:
+            self.kill()
+
 class Enemy(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.enemy
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
 
-        rand = random.randrange(0, 2)
+        rand = random.randrange(0, 5)
 
         match rand:
             case 0:
                 self.image = pg.image.load("resources/sprites/fireEnemyD.png")
             case 1:
                 self.image = pg.image.load("resources/sprites/iceEnemyD.png")
-            #case 2:
-            #    self.image = pg.image.load("resources/sprites/thunderEnemyD.png")
-            #case 3:
-            #    self.image = pg.image.load("resources/sprites/windEnemyD.png")
-            #case 4:
-            #    self.image = pg.image.load("resources/sprites/swordEnemyD.png")
+            case 2:
+                self.image = pg.image.load("resources/sprites/thunderEnemyD.png")
+            case 3:
+                self.image = pg.image.load("resources/sprites/windEnemyD.png")
+            case 4:
+                self.image = pg.image.load("resources/sprites/swordEnemyD.png")
 
         self.image = pg.transform.scale(self.image, (64, 64))
         self.rect = self.image.get_rect()
