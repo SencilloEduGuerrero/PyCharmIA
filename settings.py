@@ -22,9 +22,6 @@ BGCOLOR = pg.transform.scale(BGCOLOR, SCREENSIZE)
 LOADSCREEN = pg.image.load("resources/sprites/ScreenSpriteA.png")
 LOADSCREEN = pg.transform.scale(LOADSCREEN, SCREENSIZE)
 
-max_enemies = 10
-enemy_count = 0
-
 #  Tamaño de los espacios y de las columnas y renglones.
 TITLESIZE = 64
 GRIDWIDTH = WIDTH / TITLESIZE

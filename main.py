@@ -1,9 +1,8 @@
-import random
-
-from settings import *
 from sprites import *
+from settings import *
 import pygame as pg
 import sys
+import random
 
 #  Clase Main conocida como 'Game'
 #  en esta clase se define la pantalla con su tamaño, display.
@@ -30,10 +29,13 @@ class Game:
         self.player = Player(self, 1, 1)
 
         self.goals = []
-        for _ in range(random.randrange(4,12)):
-                goal = Goal(self, random.randrange(0,14), random.randrange(0, 14))
-                if not (goal.x == self.player.x and goal.y == self.player.y):
-                    self.goals.append(goal)
+        for _ in range(random.randrange(4,10)):
+            rand_x = random.randrange(0, 16)
+            rand_y = random.randrange(0, 13)
+
+            if not (rand_x == self.player.x and rand_y == self.player.y):
+                goal = Goal(self, rand_x, rand_y)
+                self.goals.append(goal)
 
         max_enemies = 10
         enemy_count = 0
@@ -44,7 +46,7 @@ class Game:
 
         while enemy_count < max_enemies:
             rand_x = random.randrange(0, 16)
-            rand_y = random.randrange(0, 16)
+            rand_y = random.randrange(0, 13)
 
             if (not (rand_x == self.player.x and rand_y == self.player.y)
                     and not any(goal.x == rand_x and goal.y == rand_y for goal in self.goals)
@@ -62,7 +64,7 @@ class Game:
 
         while food_count < max_food:
             rand_x = random.randrange(0, 16)
-            rand_y = random.randrange(0, 16)
+            rand_y = random.randrange(0, 13)
 
             if (not (rand_x == self.player.x and rand_y == self.player.y)
                     and not any(goal.x == rand_x and goal.y == rand_y for goal in self.goals)
@@ -78,7 +80,7 @@ class Game:
         used_positions = set()
 
         for x in range(0, 16):
-            for y in range(0, 16):
+            for y in range(0, 13):
                 rand = random.randrange(0, 10)
                 if rand > 7:
                     if (not (x == self.player.x and y == self.player.y)
@@ -88,6 +90,14 @@ class Game:
                             and (x, y) not in used_positions):
                         Wall(self, x, y)
                         used_positions.add((x, y))
+
+        self.hud = pg.sprite.Group()
+        self.hud = HUD(self, 0, 13)
+
+        self.icon = pg.sprite.Group()
+        self.icon = Icon(self, 0, 13)
+
+        self.healthB = HealthBar(self,224, 898, 224, 36, 100)
 
 #  run es lo que ejecuta o permite crear el tiempo y así
 #  poder tener un movimiento o animación, donde traza
@@ -124,6 +134,7 @@ class Game:
         self.screen.blit(BGCOLOR, (0, 0))
         self.draw_grid()
         self.all_sprites.draw(self.screen)
+        self.healthB.draw(self.screen)
         pg.display.flip()
 
 #  Los eventos en resumida cuenta son los que al recibir una indicación realiza una

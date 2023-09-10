@@ -28,7 +28,7 @@ class Player(pg.sprite.Sprite):
     def collide_with_walls(self, dx = 0, dy = 0):
         if ( self.x == 0 and  dx < 0 )or( self.y == 0 and dy < 0):
          return True
-        if (self.x == 15 and dx > 0) or (self.y == 15 and dy > 0):
+        if (self.x == 15 and dx > 0) or (self.y == 12 and dy > 0):
             return True
         for wall in self.game.walls:
             if wall.x == self.x + dx and wall.y == self.y + dy:
@@ -123,6 +123,55 @@ class Enemy(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
+
+    def update(self):
+        self.rect.x = self.x * TITLESIZE
+        self.rect.y = self.y * TITLESIZE
+
+class HUD(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.enemy
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.image.load("resources/sprites/HudFormatK.png")
+        self.image = pg.transform.scale(self.image, (WIDTH, 192))
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+
+    def update(self):
+        self.rect.x = self.x * TITLESIZE
+        self.rect.y = self.y * TITLESIZE
+
+class Icon(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.enemy
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.image.load("resources/sprites/iNormal.png")
+        self.image = pg.transform.scale(self.image, (WIDTH, 192))
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+
+    def update(self):
+        self.rect.x = self.x * TITLESIZE
+        self.rect.y = self.y * TITLESIZE
+
+class HealthBar():
+    def __init__(self, game, x, y, w, h, max_hp):
+        self.game = game
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.hp = max_hp
+        self.max_hp = max_hp
+
+    def draw(self, surface):
+        ratio = self.hp / self.max_hp
+        pg.draw.rect(self.game.screen, (255, 255, 255), (self.x, self.y, self.w, self.h))
+        pg.draw.rect(self.game.screen, (255, 0, 128), (self.x, self.y, self.w * ratio, self.h))
 
     def update(self):
         self.rect.x = self.x * TITLESIZE
