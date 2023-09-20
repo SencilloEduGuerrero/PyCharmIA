@@ -1,138 +1,54 @@
-import random
-import pygame as pg
 from settings import *
 
 
-#  Se crea la clase del jugador, donde se asigna su sprite, en donde estará.
-#  tamaño, su dibujo que es un rectangulo y sus posiciones.
-class Player(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.image.load("resources/sprites/kirbySpriteD.png")
-        self.image = pg.transform.scale(self.image, (64, 64))
-        self.rect = self.image.get_rect()
+class Player:
+    def __init__(self, x, y, max_health):
         self.x = x
         self.y = y
+        self.health = 100
+        self.alive = True
+        self.max_health = max_health
+        self.health = max_health
+        self.alive = True
+        self.health_bar_width = 185
+        self.health_bar_height = 50
+        self.health_bar_color = (255, 192, 203)
+        self.health_bar_background_color = (0, 0, 0)  # Black color for the background
 
-#  Metodo de movimiento, que toma su posición y utiliza auxiliares.
-#  si detecta el otro metodo de colisión, conserva su posición.
-    def move(self, dx = 0, dy = 0):
-        if not self.collide_with_walls(dx, dy):
-            self.x += dx
-            self.y += dy
+    def draw_health_bar(self, screen):
+        health_percentage = max(0, self.health) / self.max_health
+        bar_width = int(self.health_bar_width * health_percentage)
 
-#  Método de colisión con paredes, donde toma la pared y crea una
-#  validación donde se compara si las coordenas coinciden para dar colisión.
-    def collide_with_walls(self, dx = 0, dy = 0):
-        if ( self.x == 0 and  dx < 0 )or( self.y == 0 and dy < 0):
-         return True
-        if (self.x == 15 and dx > 0) or (self.y == 12 and dy > 0):
-            return True
-        for wall in self.game.walls:
-            if wall.x == self.x + dx and wall.y == self.y + dy:
-                return True
-        return False
+        health_bar_bg_rect = pg.Rect(11 * TITLESIZE, 44 * TITLESIZE, self.health_bar_width, self.health_bar_height)
+        pg.draw.rect(screen, self.health_bar_background_color, health_bar_bg_rect)
 
-#  Método de actualizar y sincronizar los rectangulos con las posiciones o coordenadas.
-    def update(self):
-        self.rect.x = self.x * TITLESIZE
-        self.rect.y = self.y * TITLESIZE
-
-#  Clase de pared, donde se crea su grupo, dibuja su sprite, se coloca, toma el tamaño
-#  toma sus posiciones y respeta las coordenadas.
-class Wall(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.walls
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.Surface((TITLESIZE, TITLESIZE))
-        self.image = pg.image.load("resources/sprites/wallSprite.png")
-        self.image = pg.transform.scale(self.image, (64, 64))
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.rect.x = x * TITLESIZE
-        self.rect.y = y * TITLESIZE
-
-class Goal(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.image.load("resources/sprites/goal.png")
-        self.image = pg.transform.scale(self.image, (64, 64))
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.visited = False
+        health_bar_rect = pg.Rect(11 * TITLESIZE, 44 * TITLESIZE, bar_width, self.health_bar_height)
+        pg.draw.rect(screen, self.health_bar_color, health_bar_rect)
 
     def update(self):
-        self.rect.x = self.x * TITLESIZE
-        self.rect.y = self.y * TITLESIZE
+        self.x = self.x * TITLESIZE
+        self.y = self.y * TITLESIZE
 
-    def player_visited(self, player):
-        if not self.visited:
-            player.image = pg.image.load("resources/sprites/victoryKirby.png")
-            player.image = pg.transform.scale(player.image, (64, 64))
-            self.visited = True
-            self.kill()
 
-# Aun no esta terminado u _ u
-class Food(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.food  # Assuming you have a sprite group for food
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.image.load("resources/sprites/food.png")
-        self.image = pg.transform.scale(self.image, (64, 64))
-        self.rect = self.image.get_rect()
+class Enemy:
+    def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.alive = True
+
+    def status(self):
+        if self.alive:
+            return 'ALIVE'
+
+        return 'DEATH'
 
     def update(self):
-        self.rect.x = self.x * TITLESIZE
-        self.rect.y = self.y * TITLESIZE
+        self.x = self.x * TITLESIZE
+        self.y = self.y * TITLESIZE
 
-    def player_visited(self, player):
-        if self.x == player.x and self.y == player.y:
-            self.kill()
 
-class Enemy(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.enemy
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-
-        rand = random.randrange(0, 5)
-
-        match rand:
-            case 0:
-                self.image = pg.image.load("resources/sprites/fireEnemyD.png")
-            case 1:
-                self.image = pg.image.load("resources/sprites/iceEnemyD.png")
-            case 2:
-                self.image = pg.image.load("resources/sprites/thunderEnemyD.png")
-            case 3:
-                self.image = pg.image.load("resources/sprites/windEnemyD.png")
-            case 4:
-                self.image = pg.image.load("resources/sprites/swordEnemyD.png")
-
-        self.image = pg.transform.scale(self.image, (64, 64))
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-
-    def update(self):
-        self.rect.x = self.x * TITLESIZE
-        self.rect.y = self.y * TITLESIZE
-
-class HUD(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.enemy
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
+class HUD:
+    def __init__(self, x, y):
         self.image = pg.image.load("resources/sprites/HudFormatK.png")
         self.image = pg.transform.scale(self.image, (WIDTH, 192))
         self.rect = self.image.get_rect()
@@ -143,36 +59,84 @@ class HUD(pg.sprite.Sprite):
         self.rect.x = self.x * TITLESIZE
         self.rect.y = self.y * TITLESIZE
 
-class Icon(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.enemy
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.image.load("resources/sprites/iNormal.png")
-        self.image = pg.transform.scale(self.image, (WIDTH, 192))
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
 
-    def update(self):
-        self.rect.x = self.x * TITLESIZE
-        self.rect.y = self.y * TITLESIZE
+class Node:
+    def __init__(self, parent = None, position = None):
+        self.parent = parent
+        self.position = position
 
-class HealthBar():
-    def __init__(self, game, x, y, w, h, max_hp):
-        self.game = game
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.hp = max_hp
-        self.max_hp = max_hp
+        self.g = 0
+        self.h = 0
+        self.f = 0
 
-    def draw(self, surface):
-        ratio = self.hp / self.max_hp
-        pg.draw.rect(self.game.screen, (255, 255, 255), (self.x, self.y, self.w, self.h))
-        pg.draw.rect(self.game.screen, (255, 0, 128), (self.x, self.y, self.w * ratio, self.h))
+    def __eq__(self, other):
+        return self.position == other.position
 
-    def update(self):
-        self.rect.x = self.x * TITLESIZE
-        self.rect.y = self.y * TITLESIZE
+
+def astar(maze, start, end):
+    #if maze[start[0]][start[1]] != 0 or maze[end[0]][end[1]] != 0:
+    #    return None
+
+    start_node = Node(None, start)
+    start_node.g = start_node.h = start_node.f = 0
+    end_node = Node(None, end)
+    end_node.g = end_node.h = end_node.f = 0
+
+    open_list = []
+    closed_list = []
+
+    open_list.append(start_node)
+
+    while len(open_list) > 0:
+
+        current_node = open_list[0]
+        current_index = 0
+        for index, item in enumerate(open_list):
+            if item.f < current_node.f:
+                current_node = item
+                current_index = index
+
+        open_list.pop(current_index)
+        closed_list.append(current_node)
+
+        if current_node == end_node:
+            path = []
+            current = current_node
+            while current is not None:
+                path.append(current.position)
+                current = current.parent
+            return path[::-1]
+
+        children = []
+        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # Adjacent squares
+
+            node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
+
+            if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (
+                    len(maze[len(maze) - 1]) - 1) or node_position[1] < 0:
+                continue
+
+            if maze[node_position[0]][node_position[1]] != 0 and maze[node_position[0]][node_position[1]] != 1 and \
+                    maze[node_position[0]][node_position[1]] != 4:
+                continue
+
+            new_node = Node(current_node, node_position)
+
+            children.append(new_node)
+
+        for child in children:
+
+            for closed_child in closed_list:
+                if child == closed_child:
+                    continue
+
+            child.g = current_node.g + 1
+            child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
+                        (child.position[1] - end_node.position[1]) ** 2)
+            child.f = child.g + child.h
+
+            for open_node in open_list:
+                if child == open_node and child.g > open_node.g:
+                    continue
+
+            open_list.append(child)

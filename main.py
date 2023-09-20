@@ -1,189 +1,155 @@
 from sprites import *
 from settings import *
+import time
 import pygame as pg
-import sys
-import random
-
-#  Clase Main conocida como 'Game'
-#  en esta clase se define la pantalla con su tamaño, display.
-#  se crea un reloj interno para los FPS.
-class Game:
-    def __init__(self):
-        pg.init()
-        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-        pg.display.set_caption(TITLE)
-        self.clock = pg.time.Clock()
-        pg.key.set_repeat(500, 100) #  Es el delay que se pone si se mantiene presionado un botón.
-        self.load_data()
-
-#  Método de cargar información pero aún no tiene nada.
-    def load_data(self):
-        pass
-
-#  En 'new' toma los sprites dibujados, primero toma al jugador
-#  toma sus atributos y lo dibuja en la posición (x = 1, y = 7)
-#  walls sería la clase de paredes, donde se dibujan creando fors,
-#  en lugar de ir dibujando una pared por una.
-    def new(self):
-        self.all_sprites = pg.sprite.Group()
-        self.player = Player(self, 1, 1)
-
-        self.goals = []
-        for _ in range(random.randrange(4,10)):
-            rand_x = random.randrange(0, 16)
-            rand_y = random.randrange(0, 13)
-
-            if not (rand_x == self.player.x and rand_y == self.player.y):
-                goal = Goal(self, rand_x, rand_y)
-                self.goals.append(goal)
-
-        max_enemies = 10
-        enemy_count = 0
-
-        # Validaciones para evitar que se repitan los enemigos en la misma posicion.
-        self.enemy = pg.sprite.Group()
-        used_positions = set()
-
-        while enemy_count < max_enemies:
-            rand_x = random.randrange(0, 16)
-            rand_y = random.randrange(0, 13)
-
-            if (not (rand_x == self.player.x and rand_y == self.player.y)
-                    and not any(goal.x == rand_x and goal.y == rand_y for goal in self.goals)
-                    and (rand_x, rand_y) not in used_positions):
-                Enemy(self, rand_x, rand_y)
-                enemy_count += 1
-                used_positions.add((rand_x, rand_y))
-
-        max_food = 9
-        food_count = 0
-
-        # Validaciones para evitar que se repitan los enemigos en la misma posicion.
-        self.food = pg.sprite.Group()
-        used_positions = set()
-
-        while food_count < max_food:
-            rand_x = random.randrange(0, 16)
-            rand_y = random.randrange(0, 13)
-
-            if (not (rand_x == self.player.x and rand_y == self.player.y)
-                    and not any(goal.x == rand_x and goal.y == rand_y for goal in self.goals)
-                    and not any (enemy.x == rand_x and enemy.y == rand_y for enemy in self.enemy)
-                    and (rand_x, rand_y) not in used_positions):
-                Food(self, rand_x, rand_y)
-                food_count += 1
-                used_positions.add((rand_x, rand_y))
 
 
-        # Validaciones para evitar que se repitan las paredes en la misma posicion.
-        self.walls = pg.sprite.Group()
-        used_positions = set()
+player_position = None
+player_alive = True
+enemy_position = None
+hud = HUD(0, 40)
 
-        for x in range(0, 16):
-            for y in range(0, 13):
-                rand = random.randrange(0, 10)
-                if rand > 7:
-                    if (not (x == self.player.x and y == self.player.y)
-                            and not any(goal.x == x and goal.y == y for goal in self.goals)
-                            and not any(enemy.x == x and enemy.y == y for enemy in self.enemy)
-                            and not any(food.x == x and food.y == y for food in self.food)
-                            and (x, y) not in used_positions):
-                        Wall(self, x, y)
-                        used_positions.add((x, y))
+for row_idx, row in enumerate(levelMap):
+    for col_idx, value in enumerate(row):
+        if value == 1:
+            player_position = (row_idx, col_idx)
+        elif value == 2:
+            enemy_position = (row_idx, col_idx)
 
-        self.hud = pg.sprite.Group()
-        self.hud = HUD(self, 0, 13)
+if player_position is not None:
+    player = Player(player_position[0], player_position[1], 100)
 
-        self.icon = pg.sprite.Group()
-        self.icon = Icon(self, 0, 13)
+if enemy_position is not None:
+    enemy = Enemy(enemy_position[0], enemy_position[1])
 
-        self.healthB = HealthBar(self,224, 898, 224, 36, 100)
+mapDraw = levelMap
 
-#  run es lo que ejecuta o permite crear el tiempo y así
-#  poder tener un movimiento o animación, donde traza
-#  los eventos, los actualiza y los dibuja para que sea
-#  sincronizado.
-    def run(self):
-        self.playing = True
-        while self.playing:
-            self.dt = self.clock.tick(FPS) / 1000
-            self.events()
-            self.update()
-            self.draw()
+last_movement_time = pg.time.get_ticks()
+movement_interval = 500
+
+start = (enemy.x, enemy.y)
+end = (player.x, player.y)
+
+path = astar(mapDraw, start, end)
+
+pg.init()
+pg.font.init()
+
+custom_font = pg.font.Font("resources/fonts/Pixel Emulator.otf", 25)
+custom_fontH = pg.font.Font("resources/fonts/Pixel Emulator.otf", 23)
+startTime = time.time()
+pg.font.init()
+levelText = custom_font.render('Level Test', True, (255, 255, 255))
+healthText = custom_fontH.render(str(player.health) + '/100', True, (255, 255, 255))
+enemyText = custom_font.render('Enemies: ' + str(enemy.status()), True, (255, 255, 255))
+levelTextR = levelText.get_rect()
+healthTextR = healthText.get_rect()
+enemyTextR = enemyText.get_rect()
+levelTextR.center = (695, 45)
+healthTextR.center = (260, 680)
+enemyTextR.center = (585, 725)
+timeText = custom_font.render("Time: " + str(0), True, (0, 0, 0))
+timeTextR = timeText.get_rect()
+timeTextR.center = (520, 670)
 
 
-#  Método para cerrar el proyecto y salir del sistema.
-    def quit(self):
-        pg.quit()
-        sys.exit()
+def algorith():
+    #if mapDraw[0][1] != 0 and mapDraw[1][0] != 0:
+    #    return None
 
-#  Actualiza los sprites para que si hay algún cambio se note.
-    def update(self):
-        self.all_sprites.update()
+    maze = astar(mapDraw, (enemy.x, enemy.y), (player.x, player.y))
 
-#  Dibuja lo que serían las columnas y filas tomando en cuenta el tamaño de la pantalla.
-    def draw_grid(self):
-        for x in range(0, WIDTH, TITLESIZE):
-            pg.draw.line(self.screen, LIGHTGREY, (x, 0), (x, HEIGHT))
-        for y in range(0, HEIGHT, TITLESIZE):
-            pg.draw.line(self.screen, LIGHTGREY, (0, y), (WIDTH, y))
+    #if maze is None:
+    #    return None
 
-#  Dibuja el fondo, las columnas y filas, y también los sprites que se dibujarán.
-#  display.flip actualiza y verifica, se ubica al final.
-    def draw(self):
-        self.screen.blit(BGCOLOR, (0, 0))
-        self.draw_grid()
-        self.all_sprites.draw(self.screen)
-        self.healthB.draw(self.screen)
-        pg.display.flip()
+    mapDraw[enemy.x][enemy.y] = 0
 
-#  Los eventos en resumida cuenta son los que al recibir una indicación realiza una
-#  acción, como el botón para cerrar o moverse.
-    def events(self):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                self.quit()
-            #  Para la IA se desactivaría de aquí...
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_r:
-                    self.new()
-                if event.key == pg.K_ESCAPE:
-                    self.quit()
-                if event.key == pg.K_LEFT:
-                    self.player.move(dx = -1)
-                    self.player.image = pg.image.load("resources/sprites/kirbySpriteL.png")
-                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
-                if event.key == pg.K_RIGHT:
-                    self.player.move(dx = 1)
-                    self.player.image = pg.image.load("resources/sprites/kirbySpriteR.png")
-                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
-                if event.key == pg.K_UP:
-                    self.player.move(dy = -1)
-                    self.player.image = pg.image.load("resources/sprites/kirbySpriteU.png")
-                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
-                if event.key == pg.K_DOWN:
-                    self.player.move(dy = 1)
-                    self.player.image = pg.image.load("resources/sprites/kirbySpriteD.png")
-                    self.player.image = pg.transform.scale(self.player.image, (64, 64))
-                for goal in self.goals:
-                    if self.player.x == goal.x and self.player.y == goal.y:
-                        goal.player_visited(self.player)
-                for food in self.food:
-                    if self.player.x == food.x and self.player.y == food.y:
-                        food.player_visited(self.player)
-            #  hasta aqui...
+    if maze[1][0] == player.x and maze[1][1] == player.y:
+        player.health = player.health - 10
+    elif maze[1][0] == player.x and maze[1][1] == player.y:
+        mapDraw[maze[1][0]][maze[1][1]] = 0
+    else:
+        enemy.x = maze[1][0]
+        enemy.y = maze[1][1]
+        mapDraw[enemy.x][enemy.y] = 2
 
-#  Pantalla de inicio, aun no tiene nada.
-    def show_start_screen(self):
-        pass
 
-    def show_go_screen(self):
-        pass
+def drawUI():
+    endTime = time.time()
+    timeText = custom_font.render("Time: " + str(int(endTime - startTime)), True, (0, 0, 0))
+    healthText = custom_font.render(str(player.health) + "/100", True, (255, 0, 0))
+    enemyText = custom_font.render("Enemy: " + str(enemy.status()), True, (0, 0, 0))
+    screen.blit(timeText, timeTextR)
+    screen.blit(levelText, levelTextR)
+    screen.blit(enemyText, enemyTextR)
+    screen.blit(healthText, healthTextR)
 
-#  Es lo que ejecuta y abre la pantalla del juego, sin esto no se crea la ventana.
-g = Game()
-g.show_start_screen()
-while True:
-    g.new()
-    g.run()
-    g.show_go_screen()
+
+def update_screen():
+    if player.health <= 0:
+        player.health = 0
+        player.alive = False
+        screen.fill(BLACK)
+
+
+screen = pg.display.set_mode(SCREENSIZE)
+pg.display.set_caption("Test Game")
+
+done = False
+paused = False
+clock = pg.time.Clock()
+
+while not done:
+    for event in pg.event.get():
+        keys = pg.key.get_pressed()
+        if event.type == pg.QUIT:
+            done = True
+        if event.type == pg.KEYDOWN:
+            if event.key == pg.K_ESCAPE:
+                done = True
+
+    screen.blit(BGCOLOR, (0, 0))
+
+    if not paused:
+        current_time = pg.time.get_ticks()
+        if current_time - last_movement_time >= movement_interval:
+            algorith()
+            last_movement_time = current_time
+
+        update_screen()
+
+        hud.update()
+        player.draw_health_bar(screen)
+
+        screen.blit(hud.image, (hud.rect.x, hud.rect.y))
+
+    for row in range(10):
+        for column in range(10):
+            texture = None
+            color = pg.Color(255, 255, 255, 25)
+
+            if mapDraw[row][column] == 1:
+                color = pg.Color(0, 255, 0, 255)
+            elif mapDraw[row][column] == 2:
+                color = pg.Color(255, 0, 0, 255)
+            elif mapDraw[row][column] == 3:
+                texture = pg.image.load("resources/sprites/wallSprite.png").convert_alpha()
+                texture = pg.transform.scale(texture, (52, 52))
+            elif mapDraw[row][column] == 4:
+                color = pg.Color(255, 255, 0, 255)
+
+            if texture is not None:
+                screen.blit(texture, ((MARGIN + GRIDWIDTH) * column + MARGIN, (MARGIN + GRIDHEIGHT) * row + MARGIN))
+
+            rect_surface = pg.Surface((GRIDWIDTH, GRIDHEIGHT), pg.SRCALPHA)
+            pg.draw.rect(rect_surface, color, (0, 0, GRIDWIDTH, GRIDHEIGHT))
+
+            screen.blit(rect_surface, ((MARGIN + GRIDWIDTH) * column + MARGIN,
+                                       (MARGIN + GRIDHEIGHT) * row + MARGIN))
+
+    drawUI()
+
+    clock.tick(30)
+    pg.display.flip()
+
+pg.quit()
