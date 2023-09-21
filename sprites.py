@@ -108,8 +108,7 @@ def astar(maze, start, end):
             return path[::-1]
 
         children = []
-        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # Adjacent squares
-
+        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
 
             if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (
@@ -117,7 +116,7 @@ def astar(maze, start, end):
                 continue
 
             if maze[node_position[0]][node_position[1]] != 0 and maze[node_position[0]][node_position[1]] != 1 and \
-                    maze[node_position[0]][node_position[1]] != 4:
+                    maze[node_position[0]][node_position[1]] != 4 and maze[node_position[0]][node_position[1]] != 5:
                 continue
 
             new_node = Node(current_node, node_position)

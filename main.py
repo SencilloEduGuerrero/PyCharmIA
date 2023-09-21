@@ -54,24 +54,76 @@ timeTextR.center = (520, 670)
 
 
 def algorith():
-    #if mapDraw[0][1] != 0 and mapDraw[1][0] != 0:
-    #    return None
+    if player.health <= 30:
+        nearest_health_space = find_nearest_health_space((enemy.x, enemy.y), mapDraw)
+
+        if nearest_health_space:
+            enemy_path = astar(mapDraw, (enemy.x, enemy.y), nearest_health_space)
+
+            if enemy_path:
+                next_position = enemy_path[1]
+                tile_value = mapDraw[next_position[0]][next_position[1]]
+                if tile_value == 5:
+                    player.health += 10
+                mapDraw[enemy.x][enemy.y] = 0
+                enemy.x, enemy.y = next_position
+                mapDraw[enemy.x][enemy.y] = 2
+                return
 
     maze = astar(mapDraw, (enemy.x, enemy.y), (player.x, player.y))
 
-    #if maze is None:
-    #    return None
+    if maze:
+        mapDraw[enemy.x][enemy.y] = 0
 
-    mapDraw[enemy.x][enemy.y] = 0
+        if maze[1][0] == player.x and maze[1][1] == player.y:
+            mapDraw[maze[1][0]][maze[1][1]] = 0
+        elif mapDraw[maze[1][0]][maze[1][1]] == 4:
+            mapDraw[maze[1][0]][maze[1][1]] = 0
+            player.health -= 10
+        else:
+            enemy.x = maze[1][0]
+            enemy.y = maze[1][1]
+            mapDraw[enemy.x][enemy.y] = 2
 
-    if maze[1][0] == player.x and maze[1][1] == player.y:
-        player.health = player.health - 10
-    elif maze[1][0] == player.x and maze[1][1] == player.y:
-        mapDraw[maze[1][0]][maze[1][1]] = 0
-    else:
-        enemy.x = maze[1][0]
-        enemy.y = maze[1][1]
-        mapDraw[enemy.x][enemy.y] = 2
+
+def find_nearest_mine(start_position):
+    mines = [(row, col) for row in range(len(mapDraw)) for col in range(len(mapDraw[0])) if mapDraw[row][col] == 5]
+
+    if not mines:
+        return None
+
+    nearest_mine = min(mines, key=lambda pos: abs(pos[0] - start_position[0]) + abs(pos[1] - start_position[1]))
+    return nearest_mine
+
+
+def find_nearest_health_space(start_position, mapDraw):
+    open_list = []
+    closed_set = set()
+
+    open_list.append(Node(None, start_position))
+
+    while open_list:
+        current_node = open_list.pop(0)
+
+        if mapDraw[current_node.position[0]][current_node.position[1]] == 5:  # Health space
+            return current_node.position
+
+        closed_set.add(current_node.position)
+
+        adjacent_positions = [(current_node.position[0] + dy, current_node.position[1] + dx)
+                              for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]]
+
+        for neighbor in adjacent_positions:
+            if neighbor[0] < 0 or neighbor[0] >= len(mapDraw) or \
+               neighbor[1] < 0 or neighbor[1] >= len(mapDraw[0]) or \
+               mapDraw[neighbor[0]][neighbor[1]] == 3 or \
+               neighbor in closed_set:
+                continue
+
+            new_node = Node(current_node, neighbor)
+            open_list.append(new_node)
+
+    return None
 
 
 def drawUI():
@@ -90,6 +142,8 @@ def update_screen():
         player.health = 0
         player.alive = False
         screen.fill(BLACK)
+    if player.health >= 100:
+        player.health = 100
 
 
 screen = pg.display.set_mode(SCREENSIZE)
@@ -137,6 +191,8 @@ while not done:
                 texture = pg.transform.scale(texture, (52, 52))
             elif mapDraw[row][column] == 4:
                 color = pg.Color(255, 255, 0, 255)
+            elif mapDraw[row][column] == 5:
+                color = pg.Color(255, 255, 255, 255)
 
             if texture is not None:
                 screen.blit(texture, ((MARGIN + GRIDWIDTH) * column + MARGIN, (MARGIN + GRIDHEIGHT) * row + MARGIN))

@@ -4,8 +4,6 @@ import math
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-DARKGREY = (40, 40, 40)
-LIGHTGREY = (100, 100, 100)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
@@ -37,8 +35,20 @@ columns = 10
 max_obstacles = 25
 min_distance = 8
 
-levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
+levelMap = [
+[1,0,4,0,0,3,0,0,0,0],
+[0,3,4,0,0,0,0,3,0,0],
+[4,3,4,0,0,0,5,3,3,0],
+[4,0,0,3,0,0,0,0,3,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,3,3,0,0,3,0,0,3,3],
+[0,0,3,0,4,3,0,0,0,0],
+[0,0,0,0,0,4,4,3,3,5],
+[0,3,3,0,3,0,4,4,4,0],
+[0,0,0,0,3,0,0,0,4,2]
+]
 
+""" levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
 
 def distance(position1, position2):
     return math.sqrt((position1[0] - position2[0]) ** 2 + (position1[1] - position2[1]) ** 2)
@@ -60,4 +70,4 @@ for _ in range(max_obstacles):
         column = random.randint(0, columns - 1)
         if levelMap[row][column] == 0:
             levelMap[row][column] = 3
-            break
+            break """
