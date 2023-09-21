@@ -10,8 +10,8 @@ RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 
 #  Ajustes del Juego
-WIDTH = 800    #  16 * 64 o 32 * 32 o 64 * 16
-HEIGHT = 800    #  16 * 48 o 32 * 24 o 64 * 12
+WIDTH = 800  # 16 * 64 o 32 * 32 o 64 * 16
+HEIGHT = 800  # 16 * 48 o 32 * 24 o 64 * 12
 SCREENSIZE = (WIDTH, HEIGHT)
 MARGIN = 5
 FPS = 60
@@ -32,10 +32,14 @@ mapDraw = []
 
 rows = 10
 columns = 10
-max_obstacles = 25
-min_distance = 8
+max_obstacles = 35
+min_distance = 10
+max_limit_4 = 5
+max_limit_5 = 5
+count_4 = 0
+count_5 = 0
 
-levelMap = [
+""" levelMap = [
 [1,0,4,0,0,3,0,0,0,0],
 [0,3,4,0,0,0,0,3,0,0],
 [4,3,4,0,0,0,5,3,3,0],
@@ -46,9 +50,10 @@ levelMap = [
 [0,0,0,0,0,4,4,3,3,5],
 [0,3,3,0,3,0,4,4,4,0],
 [0,0,0,0,3,0,0,0,4,2]
-]
+] """
 
-""" levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
+levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
+
 
 def distance(position1, position2):
     return math.sqrt((position1[0] - position2[0]) ** 2 + (position1[1] - position2[1]) ** 2)
@@ -68,6 +73,14 @@ for _ in range(max_obstacles):
     while True:
         row = random.randint(0, rows - 1)
         column = random.randint(0, columns - 1)
-        if levelMap[row][column] == 0:
+        if count_4 < max_limit_4 and levelMap[row][column] == 0:
+            levelMap[row][column] = 4
+            count_4 += 1
+            break
+        if count_5 < max_limit_5 and levelMap[row][column] == 0:
+            levelMap[row][column] = 5
+            count_5 += 1
+            break
+        elif levelMap[row][column] == 0:
             levelMap[row][column] = 3
-            break """
+            break
