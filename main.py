@@ -3,6 +3,7 @@ from settings import *
 import time
 import pygame as pg
 
+from sprites import Enemy
 
 player_position = None
 player_alive = True
@@ -16,13 +17,23 @@ for row_idx, row in enumerate(levelMap):
         elif value == 2:
             enemy_position = (row_idx, col_idx)
 
-if player_position is not None:
-    player = Player(player_position[0], player_position[1], 100)
-
-if enemy_position is not None:
-    enemy = Enemy(enemy_position[0], enemy_position[1])
+player = Player(player_position[0], player_position[1], 100) if player_position is not None else None
+enemy = Enemy(enemy_position[0], enemy_position[1]) if enemy_position is not None else None
 
 mapDraw = levelMap
+
+
+def has_dead_ends(maze):
+    for row in range(len(maze)):
+        for col in range(len(maze[0])):
+            if maze[row][col] == 0:
+                neighbors = [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]
+                passages = sum(
+                    1 for r, c in neighbors if len(maze) > r >= 0 == maze[r][c] and 0 <= c < len(maze[0]))
+                if passages <= 1:
+                    return True
+    return False
+
 
 last_movement_time = pg.time.get_ticks()
 movement_interval = 500
@@ -30,10 +41,15 @@ movement_interval = 500
 start = (enemy.x, enemy.y)
 end = (player.x, player.y)
 
-path = astar(mapDraw, start, end)
+if has_dead_ends(mapDraw):
+    print("Maze has dead-ends and may be unsolvable.")
+else:
+    path = astar(mapDraw, start, end)
 
 pg.init()
 pg.font.init()
+
+timeout = 10
 
 custom_font = pg.font.Font("resources/fonts/Pixel Emulator.otf", 25)
 custom_fontH = pg.font.Font("resources/fonts/Pixel Emulator.otf", 23)
@@ -54,7 +70,7 @@ timeTextR.center = (520, 670)
 
 
 def algorith():
-    if player.health <= 30:
+    if player.health <= 40:
         nearest_health_space = find_nearest_health_space((enemy.x, enemy.y), mapDraw)
 
         if nearest_health_space:
@@ -64,7 +80,7 @@ def algorith():
                 next_position = enemy_path[1]
                 tile_value = mapDraw[next_position[0]][next_position[1]]
                 if tile_value == 5:
-                    player.health += 10
+                    player.health += 20
                 mapDraw[enemy.x][enemy.y] = 0
                 enemy.x, enemy.y = next_position
                 mapDraw[enemy.x][enemy.y] = 2
@@ -79,21 +95,14 @@ def algorith():
             mapDraw[maze[1][0]][maze[1][1]] = 0
         elif mapDraw[maze[1][0]][maze[1][1]] == 4:
             mapDraw[maze[1][0]][maze[1][1]] = 0
-            player.health -= 10
+            player.health -= 20
+        elif mapDraw[maze[1][0]][maze[1][1]] == 5:
+            mapDraw[maze[1][0]][maze[1][1]] = 0
+            player.health += 20
         else:
             enemy.x = maze[1][0]
             enemy.y = maze[1][1]
             mapDraw[enemy.x][enemy.y] = 2
-
-
-def find_nearest_mine(start_position):
-    mines = [(row, col) for row in range(len(mapDraw)) for col in range(len(mapDraw[0])) if mapDraw[row][col] == 5]
-
-    if not mines:
-        return None
-
-    nearest_mine = min(mines, key=lambda pos: abs(pos[0] - start_position[0]) + abs(pos[1] - start_position[1]))
-    return nearest_mine
 
 
 def find_nearest_health_space(start_position, mapDraw):
@@ -105,7 +114,7 @@ def find_nearest_health_space(start_position, mapDraw):
     while open_list:
         current_node = open_list.pop(0)
 
-        if mapDraw[current_node.position[0]][current_node.position[1]] == 5:  # Health space
+        if mapDraw[current_node.position[0]][current_node.position[1]] == 5:
             return current_node.position
 
         closed_set.add(current_node.position)
@@ -115,9 +124,9 @@ def find_nearest_health_space(start_position, mapDraw):
 
         for neighbor in adjacent_positions:
             if neighbor[0] < 0 or neighbor[0] >= len(mapDraw) or \
-               neighbor[1] < 0 or neighbor[1] >= len(mapDraw[0]) or \
-               mapDraw[neighbor[0]][neighbor[1]] == 3 or \
-               neighbor in closed_set:
+                    neighbor[1] < 0 or neighbor[1] >= len(mapDraw[0]) or \
+                    mapDraw[neighbor[0]][neighbor[1]] == 3 or \
+                    neighbor in closed_set:
                 continue
 
             new_node = Node(current_node, neighbor)

@@ -34,12 +34,12 @@ rows = 10
 columns = 10
 max_obstacles = 35
 min_distance = 10
-max_limit_4 = 5
-max_limit_5 = 5
+max_limit_4 = 6
+max_limit_5 = 3
 count_4 = 0
 count_5 = 0
-
-""" levelMap = [
+"""""
+levelMap = [
 [1,0,4,0,0,3,0,0,0,0],
 [0,3,4,0,0,0,0,3,0,0],
 [4,3,4,0,0,0,5,3,3,0],
@@ -50,7 +50,7 @@ count_5 = 0
 [0,0,0,0,0,4,4,3,3,5],
 [0,3,3,0,3,0,4,4,4,0],
 [0,0,0,0,3,0,0,0,4,2]
-] """
+]"""""
 
 levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
 

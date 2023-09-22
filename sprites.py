@@ -1,3 +1,4 @@
+import time
 from settings import *
 
 
@@ -13,7 +14,8 @@ class Player:
         self.health_bar_width = 185
         self.health_bar_height = 50
         self.health_bar_color = (255, 192, 203)
-        self.health_bar_background_color = (0, 0, 0)  # Black color for the background
+        self.health_bar_background_color = (0, 0, 0)
+
 
     def draw_health_bar(self, screen):
         health_percentage = max(0, self.health) / self.max_health
