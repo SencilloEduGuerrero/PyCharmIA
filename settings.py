@@ -33,24 +33,12 @@ mapDraw = []
 rows = 10
 columns = 10
 max_obstacles = 35
-min_distance = 10
+min_distance = 4
+max_distance = 8
 max_limit_4 = 6
 max_limit_5 = 3
 count_4 = 0
 count_5 = 0
-"""""
-levelMap = [
-[1,0,4,0,0,3,0,0,0,0],
-[0,3,4,0,0,0,0,3,0,0],
-[4,3,4,0,0,0,5,3,3,0],
-[4,0,0,3,0,0,0,0,3,0],
-[0,0,0,0,0,0,0,0,0,0],
-[0,3,3,0,0,3,0,0,3,3],
-[0,0,3,0,4,3,0,0,0,0],
-[0,0,0,0,0,4,4,3,3,5],
-[0,3,3,0,3,0,4,4,4,0],
-[0,0,0,0,3,0,0,0,4,2]
-]"""""
 
 levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
 
@@ -61,9 +49,12 @@ def distance(position1, position2):
 
 player_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
 
+
 while True:
     enemy_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
-    if distance(player_position, enemy_position) >= min_distance:
+    if distance(player_position, enemy_position) >= max_distance:
+        break
+    elif distance(player_position, enemy_position) >= min_distance:
         break
 
 levelMap[player_position[0]][player_position[1]] = 1
@@ -84,3 +75,17 @@ for _ in range(max_obstacles):
         elif levelMap[row][column] == 0:
             levelMap[row][column] = 3
             break
+
+"""""
+levelMap = [
+[1,0,4,0,0,3,0,0,0,0],
+[0,3,4,0,0,0,0,3,0,0],
+[4,3,4,0,0,0,5,3,3,0],
+[4,0,0,3,0,0,0,0,3,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,3,3,0,0,3,0,0,3,3],
+[0,0,3,0,4,3,0,0,0,0],
+[0,0,0,0,0,4,4,3,3,5],
+[0,3,3,0,3,0,4,4,4,0],
+[0,0,0,0,3,0,0,0,4,2]
+]"""""

@@ -3,12 +3,11 @@ from settings import *
 import time
 import pygame as pg
 
-from sprites import Enemy
-
 player_position = None
 player_alive = True
 enemy_position = None
 hud = HUD(0, 40)
+algorithm_active = True
 
 for row_idx, row in enumerate(levelMap):
     for col_idx, value in enumerate(row):
@@ -29,7 +28,7 @@ def has_dead_ends(maze):
             if maze[row][col] == 0:
                 neighbors = [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]
                 passages = sum(
-                    1 for r, c in neighbors if len(maze) > r >= 0 == maze[r][c] and 0 <= c < len(maze[0]))
+                    1 for r, c in neighbors if 0 <= r < len(maze) and 0 <= c < len(maze[0]) and maze[r][c] == 0)
                 if passages <= 1:
                     return True
     return False
@@ -44,12 +43,10 @@ end = (player.x, player.y)
 if has_dead_ends(mapDraw):
     print("Maze has dead-ends and may be unsolvable.")
 else:
-    path = astar(mapDraw, start, end)
+    path = astar(mapDraw, start, end, 5)
 
 pg.init()
 pg.font.init()
-
-timeout = 10
 
 custom_font = pg.font.Font("resources/fonts/Pixel Emulator.otf", 25)
 custom_fontH = pg.font.Font("resources/fonts/Pixel Emulator.otf", 23)
@@ -70,11 +67,14 @@ timeTextR.center = (520, 670)
 
 
 def algorith():
+    if not algorithm_active:
+        return
+
     if player.health <= 40:
         nearest_health_space = find_nearest_health_space((enemy.x, enemy.y), mapDraw)
 
         if nearest_health_space:
-            enemy_path = astar(mapDraw, (enemy.x, enemy.y), nearest_health_space)
+            enemy_path = astar(mapDraw, (enemy.x, enemy.y), nearest_health_space, 5)
 
             if enemy_path:
                 next_position = enemy_path[1]
@@ -86,7 +86,7 @@ def algorith():
                 mapDraw[enemy.x][enemy.y] = 2
                 return
 
-    maze = astar(mapDraw, (enemy.x, enemy.y), (player.x, player.y))
+    maze = astar(mapDraw, (enemy.x, enemy.y), (player.x, player.y), 5)
 
     if maze:
         mapDraw[enemy.x][enemy.y] = 0
@@ -135,6 +135,20 @@ def find_nearest_health_space(start_position, mapDraw):
     return None
 
 
+def reset_game():
+    global algorithm_active
+    global player
+    global enemy
+
+    algorithm_active = True
+
+    player_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
+    enemy_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
+
+    player = Player(player_position[0], player_position[1], 100)
+    enemy = Enemy(enemy_position[0], enemy_position[1])
+
+
 def drawUI():
     endTime = time.time()
     timeText = custom_font.render("Time: " + str(int(endTime - startTime)), True, (0, 0, 0))
@@ -170,6 +184,11 @@ while not done:
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_ESCAPE:
                 done = True
+            elif event.key == pg.K_r:
+                if not algorithm_active:
+                    reset_game()
+            elif event.key == pg.K_s:
+                algorithm_active = not algorithm_active
 
     screen.blit(BGCOLOR, (0, 0))
 

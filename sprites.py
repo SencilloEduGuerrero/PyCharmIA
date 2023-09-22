@@ -16,7 +16,6 @@ class Player:
         self.health_bar_color = (255, 192, 203)
         self.health_bar_background_color = (0, 0, 0)
 
-
     def draw_health_bar(self, screen):
         health_percentage = max(0, self.health) / self.max_health
         bar_width = int(self.health_bar_width * health_percentage)
@@ -63,7 +62,7 @@ class HUD:
 
 
 class Node:
-    def __init__(self, parent = None, position = None):
+    def __init__(self, parent=None, position=None):
         self.parent = parent
         self.position = position
 
@@ -75,9 +74,8 @@ class Node:
         return self.position == other.position
 
 
-def astar(maze, start, end):
-    #if maze[start[0]][start[1]] != 0 or maze[end[0]][end[1]] != 0:
-    #    return None
+def astar(maze, start, end, timeout=5):
+    start_time = time.time()
 
     start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0
@@ -90,6 +88,10 @@ def astar(maze, start, end):
     open_list.append(start_node)
 
     while len(open_list) > 0:
+
+        if time.time() - start_time > timeout:
+            print("Timeout reached")
+            return None
 
         current_node = open_list[0]
         current_index = 0
@@ -117,27 +119,31 @@ def astar(maze, start, end):
                     len(maze[len(maze) - 1]) - 1) or node_position[1] < 0:
                 continue
 
-            if maze[node_position[0]][node_position[1]] != 0 and maze[node_position[0]][node_position[1]] != 1 and \
-                    maze[node_position[0]][node_position[1]] != 4 and maze[node_position[0]][node_position[1]] != 5:
+            if maze[node_position[0]][node_position[1]] not in (0, 1, 4, 5):
                 continue
 
             new_node = Node(current_node, node_position)
 
-            children.append(new_node)
+            # Check if the same position is already in open or closed lists
+            if new_node in open_list:
+                existing_node = open_list[open_list.index(new_node)]
+                if new_node.g < existing_node.g:
+                    open_list.remove(existing_node)
+                    open_list.append(new_node)
+            elif new_node in closed_list:
+                existing_node = closed_list[closed_list.index(new_node)]
+                if new_node.g < existing_node.g:
+                    closed_list.remove(existing_node)
+                    open_list.append(new_node)
+            else:
+                children.append(new_node)
 
         for child in children:
-
-            for closed_child in closed_list:
-                if child == closed_child:
-                    continue
-
             child.g = current_node.g + 1
             child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
-                        (child.position[1] - end_node.position[1]) ** 2)
+                    (child.position[1] - end_node.position[1]) ** 2)
             child.f = child.g + child.h
 
-            for open_node in open_list:
-                if child == open_node and child.g > open_node.g:
-                    continue
+        open_list.extend(children)
 
-            open_list.append(child)
+    return None
