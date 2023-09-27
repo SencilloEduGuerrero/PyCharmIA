@@ -2,15 +2,24 @@ import time
 from settings import *
 
 
-class Player:
+class Goal:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def update(self):
+        self.x = self.x * TITLESIZE
+        self.y = self.y * TITLESIZE
+
+
+class Kirby:
     def __init__(self, x, y, max_health):
         self.x = x
         self.y = y
-        self.health = 100
         self.alive = True
+        self.health = 100
         self.max_health = max_health
         self.health = max_health
-        self.alive = True
         self.health_bar_width = 185
         self.health_bar_height = 50
         self.health_bar_color = (255, 192, 203)
@@ -23,19 +32,14 @@ class Player:
         health_bar_bg_rect = pg.Rect(11 * TITLESIZE, 44 * TITLESIZE, self.health_bar_width, self.health_bar_height)
         pg.draw.rect(screen, self.health_bar_background_color, health_bar_bg_rect)
 
+        background_width = self.health_bar_width - bar_width
+        health_bar_background_rect = pg.Rect(
+            (11 + bar_width) * TITLESIZE, 44 * TITLESIZE, background_width, self.health_bar_height
+        )
+        pg.draw.rect(screen, (0, 0, 0), health_bar_background_rect)
+
         health_bar_rect = pg.Rect(11 * TITLESIZE, 44 * TITLESIZE, bar_width, self.health_bar_height)
         pg.draw.rect(screen, self.health_bar_color, health_bar_rect)
-
-    def update(self):
-        self.x = self.x * TITLESIZE
-        self.y = self.y * TITLESIZE
-
-
-class Enemy:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.alive = True
 
     def status(self):
         if self.alive:
@@ -69,9 +73,11 @@ class Node:
         self.g = 0
         self.h = 0
         self.f = 0
+        self.cost = 0
 
     def __eq__(self, other):
         return self.position == other.position
+
 
 
 def astar(maze, start, end, timeout=5):
@@ -87,14 +93,12 @@ def astar(maze, start, end, timeout=5):
 
     open_list.append(start_node)
 
+    prev_position = None
+
     while len(open_list) > 0:
-
-        if time.time() - start_time > timeout:
-            print("Timeout reached")
-            return None
-
         current_node = open_list[0]
         current_index = 0
+
         for index, item in enumerate(open_list):
             if item.f < current_node.f:
                 current_node = item
@@ -112,7 +116,7 @@ def astar(maze, start, end, timeout=5):
             return path[::-1]
 
         children = []
-        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+        for new_position, cost in [((0, -1), 1), ((0, 1), 1), ((-1, 0), 1), ((1, 0), 1)]:
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
 
             if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (
@@ -123,8 +127,9 @@ def astar(maze, start, end, timeout=5):
                 continue
 
             new_node = Node(current_node, node_position)
+            new_node.g = current_node.g + cost
+            new_node.cost = cost
 
-            # Check if the same position is already in open or closed lists
             if new_node in open_list:
                 existing_node = open_list[open_list.index(new_node)]
                 if new_node.g < existing_node.g:
@@ -139,11 +144,15 @@ def astar(maze, start, end, timeout=5):
                 children.append(new_node)
 
         for child in children:
-            child.g = current_node.g + 1
             child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
                     (child.position[1] - end_node.position[1]) ** 2)
             child.f = child.g + child.h
 
         open_list.extend(children)
+
+        if current_node.position == prev_position:
+            return None
+
+        prev_position = current_node.position
 
     return None
