@@ -3,20 +3,13 @@ import random
 import math
 
 # Colores
-WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
 
 #  Ajustes del Juego
 WIDTH = 800  # 16 * 64 o 32 * 32 o 64 * 16
 HEIGHT = 800  # 16 * 48 o 32 * 24 o 64 * 12
 SCREENSIZE = (WIDTH, HEIGHT)
 MARGIN = 5
-FPS = 60
-TITLE = "Mapa Test"
 
 # Fondos
 # BGCOLOR = Fondo de diseño
@@ -50,10 +43,6 @@ BGCOLOR8 = pg.transform.scale(BGCOLOR8, SCREENSIZE)
 BGCOLOR9 = pg.image.load("resources/sprites/background9.png")
 BGCOLOR9 = pg.transform.scale(BGCOLOR9, SCREENSIZE)
 
-# BGEND = Fondo en caso de Game_Over
-BGEND = pg.image.load("resources/sprites/empty.png")
-BGEND = pg.transform.scale(BGEND, SCREENSIZE)
-
 # BGPAUSE = Fondo en caso de Pausar
 BGPAUSE = pg.image.load("resources/sprites/pause.png")
 BGPAUSE = pg.transform.scale(BGPAUSE, SCREENSIZE)
@@ -77,6 +66,7 @@ max_limit_5 = 3
 count_4 = 0
 count_5 = 0
 
+# Crea el arreglo del mapa 10x10
 levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
 
 
@@ -88,7 +78,7 @@ def distance(position1, position2):
 # Crea la posición aleatoria de
 goal_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
 
-
+# Validacion para dar un rango maximo/minimo a la meta y a Kirby
 while True:
     kirby_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
     if distance(goal_position, kirby_position) >= max_distance:
@@ -96,9 +86,11 @@ while True:
     elif distance(goal_position, kirby_position) >= min_distance:
         break
 
+# Asigna la posicion y valores
 levelMap[goal_position[0]][goal_position[1]] = 1
 levelMap[kirby_position[0]][kirby_position[1]] = 2
 
+# Establecemos un limite de ostaculos y contador para validar.
 for _ in range(max_obstacles):
     while True:
         row = random.randint(0, rows - 1)
@@ -114,17 +106,3 @@ for _ in range(max_obstacles):
         elif levelMap[row][column] == 0:
             levelMap[row][column] = 3
             break
-
-"""""
-levelMap = [
-[1,0,4,0,0,3,0,0,0,0],
-[0,3,4,0,0,0,0,3,0,0],
-[4,3,4,0,0,0,5,3,3,0],
-[4,0,0,3,0,0,0,0,3,0],
-[0,0,0,0,0,0,0,0,0,0],
-[0,3,3,0,0,3,0,0,3,3],
-[0,0,3,0,4,3,0,0,0,0],
-[0,0,0,0,0,4,4,3,3,5],
-[0,3,3,0,3,0,4,4,4,0],
-[0,0,0,0,3,0,0,0,4,2]
-]"""""

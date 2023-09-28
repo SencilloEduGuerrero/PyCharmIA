@@ -4,6 +4,8 @@ import time
 import pygame as pg
 import random
 
+optimal_path = []
+
 goal_position = None
 kirby_position = None
 hud = HUD(0, 40)
@@ -15,6 +17,7 @@ auxTime = 0
 is_imposible = False
 finished = False
 values_on = False
+error_validation = False
 
 randomBG = (random.randint(0, 9))
 
@@ -53,6 +56,7 @@ damageText = custom_font.render('Danger: ' + str(int(count_4 - aCount_4)), True,
 healText = custom_font.render('Heal: ' + str(int(count_5 - aCount_5)), True, (255, 255, 255))
 moveText = custom_fontM.render('Movements: ' + str(int(move_count)), True, (255, 255, 255))
 helpText = custom_fontM.render('Press "S" to Pause', True, (255, 255, 255))
+pathText = custom_fontM.render('Press "Q" to Path', True, (255, 255, 255))
 closeText = custom_fontM.render('Press "ESC" to Quit', True, (255, 255, 255))
 
 pauseText = custom_fontP.render('PAUSE', True, (0, 0, 255))
@@ -64,6 +68,8 @@ resetText = custom_font.render('Press "R" to Reset Game', True, (255, 255, 255))
 quitText = custom_font.render('Press "ESC" to Quit', True, (255, 255, 255))
 
 gameOverText = custom_fontP.render('GAMEOVER', True, (255, 255, 255))
+ErrorTextA = custom_font.render('Error! Something Went Wrong', True, (255, 255, 255))
+ErrorTextB = custom_font.render('Please Restart the Game', True, (255, 255, 255))
 
 healthTextR = healthText.get_rect()
 statusTextR = statusText.get_rect()
@@ -71,6 +77,7 @@ damageTextR = damageText.get_rect()
 healTextR = healthText.get_rect()
 moveTextR = moveText.get_rect()
 helpTextR = helpText.get_rect()
+pathTextR = pathText.get_rect()
 closeTextR = closeText.get_rect()
 
 descTextR = descText.get_rect()
@@ -82,6 +89,8 @@ resetTextR = resetText.get_rect()
 quitTextR = quitText.get_rect()
 
 gameOverTextR = gameOverText.get_rect()
+ErrorTextAR = ErrorTextA.get_rect()
+ErrorTextBR = ErrorTextB.get_rect()
 
 healthTextR.center = (260, 680)
 statusTextR.center = (575, 725)
@@ -89,7 +98,8 @@ damageTextR.center = (695, 95)
 healTextR.center = (695, 125)
 moveTextR.center = (650, 155)
 helpTextR.center = (690, 215)
-closeTextR.center = (685, 235)
+pathTextR.center = (690, 235)
+closeTextR.center = (685, 255)
 
 descTextR.center = (290, 230)
 descTextR2.center = (410, 300)
@@ -100,6 +110,8 @@ resetTextR.center = (355, 650)
 quitTextR.center = (315, 730)
 
 gameOverTextR.center = (WIDTH/2, HEIGHT/3)
+ErrorTextAR.center = (WIDTH/2, HEIGHT/3 - 20)
+ErrorTextBR.center = (WIDTH/2, HEIGHT/3 + 20)
 
 timeText = custom_font.render("Time: " + str(0), True, (0, 0, 0))
 timeTextR = timeText.get_rect()
@@ -136,6 +148,8 @@ def algorith():
                     aCount_4 += 1
                     kirby.health -= 20
                 if tile_value == 1:
+                    mapDraw[goal.x][goal.y] = 0
+                    finished
                     return
                 mapDraw[kirby.x][kirby.y] = 0
                 kirby.x, kirby.y = next_position
@@ -237,14 +251,51 @@ def reset_game():
     global kirby
     global mapDraw
     global levelMap
-    global count_4
-    global count_5
 
     algorithm_active = True
 
-    goal_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
-    kirby_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
+    rows = 10
+    columns = 10
 
+    levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
+
+    max_obstacles = 35
+    min_distance = 4
+    max_distance = 8
+    max_limit_4 = 6
+    max_limit_5 = 3
+    count_4 = 0
+    count_5 = 0
+
+    goal_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
+
+    while True:
+        kirby_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
+        if distance(goal_position, kirby_position) >= max_distance:
+            break
+        elif distance(goal_position, kirby_position) >= min_distance:
+            break
+
+    levelMap[goal_position[0]][goal_position[1]] = 1
+    levelMap[kirby_position[0]][kirby_position[1]] = 2
+
+    for _ in range(max_obstacles):
+        while True:
+            row = random.randint(0, rows - 1)
+            column = random.randint(0, columns - 1)
+            if count_4 < max_limit_4 and levelMap[row][column] == 0:
+                levelMap[row][column] = 4
+                count_4 += 1
+                break
+            if count_5 < max_limit_5 and levelMap[row][column] == 0:
+                levelMap[row][column] = 5
+                count_5 += 1
+                break
+            elif levelMap[row][column] == 0:
+                levelMap[row][column] = 3
+                break
+
+    mapDraw = levelMap
     goal = Goal(goal_position[0], goal_position[1])
     kirby = Kirby(kirby_position[0], kirby_position[1], 100)
 
@@ -252,6 +303,7 @@ def reset_game():
 def drawUI():
     endTime = time.time()
     auxTime = endTime - startTime
+    colorPath = pg.Color(0, 255, 0, 50)
 
     if auxTime > 100:
         auxTime = 99
@@ -263,6 +315,7 @@ def drawUI():
     healText = custom_font.render('Heal: ' + str(int(count_5 - aCount_5)), True, (255, 255, 255))
     moveText = custom_fontH.render('Movements: ' + str(int(move_count)), True, (255, 255, 255))
     helpText = custom_fontM.render('Press "S" to Pause', True, (255, 255, 255))
+    pathText = custom_fontM.render('Press "Q" to Path', True, (255, 255, 255))
     closeText = custom_fontM.render('Press "ESC" to Close', True, (255, 255, 255))
 
     screen.blit(timeText, timeTextR)
@@ -272,17 +325,26 @@ def drawUI():
     screen.blit(healText, healTextR)
     screen.blit(moveText, moveTextR)
     screen.blit(helpText, helpTextR)
+    screen.blit(pathText, pathTextR)
     screen.blit(closeText, closeTextR)
 
-    if kirby.health == 0 or is_imposible:
-        pg.draw.rect(screen, BLACK, pg.Rect(170, 200, 450, 150))
-        gameOverText = custom_fontP.render('GAMEOVER', True, (255, 255, 255))
-        screen.blit(gameOverText, gameOverTextR)
+    if not values_on:
+        if kirby.health == 0 or is_imposible:
+            pg.draw.rect(screen, BLACK, pg.Rect(170, 200, 450, 150))
+            gameOverText = custom_fontP.render('GAMEOVER', True, (255, 255, 255))
+            screen.blit(gameOverText, gameOverTextR)
 
-    if finished:
-        pg.draw.rect(screen, BLACK, pg.Rect(170, 200, 490, 150))
-        gameOverText = custom_fontP.render('FINISHED!', True, (255, 255, 255))
-        screen.blit(gameOverText, gameOverTextR)
+        if finished:
+            pg.draw.rect(screen, BLACK, pg.Rect(170, 200, 490, 150))
+            gameOverText = custom_fontP.render('FINISHED!', True, (255, 255, 255))
+            screen.blit(gameOverText, gameOverTextR)
+
+    if error_validation:
+        pg.draw.rect(screen, BLACK, pg.Rect(50, 200, 700, 150))
+        ErrorTextA = custom_font.render('Error: Something Went Wrong', True, (255, 255, 255))
+        ErrorTextB = custom_font.render('Please Restart the Game', True, (255, 255, 255))
+        screen.blit(ErrorTextA, ErrorTextAR)
+        screen.blit(ErrorTextB, ErrorTextBR)
 
     if values_on:
         cell_width = 58
@@ -302,6 +364,33 @@ def drawUI():
                         center=(col * cell_width + cell_width // 2, row * cell_height + cell_height // 2))
                     screen.blit(text, text_rect)
 
+        agent_row, agent_col = kirby_position
+        mapDraw[agent_row][agent_col] = 0
+
+        start = (kirby.x, kirby.y)
+        end = (goal.x, goal.y)
+
+        if not kirby.health <= 40:
+            optimal_path = astar(mapDraw, (start), end)
+
+            if optimal_path:
+                for position in optimal_path:
+                    row, col = position
+                    pathOptimize = pg.Surface((cell_width, cell_height), pg.SRCALPHA)
+                    pg.draw.rect(pathOptimize, colorPath, (0, 0, cell_width, cell_height))
+                    screen.blit(pathOptimize, (col * cell_width, row * cell_height))
+
+        else:
+            nearest_health_space = find_nearest_health_space((kirby.x, kirby.y), mapDraw)
+
+            optimal_path = astar(mapDraw, (kirby.x, kirby.y), nearest_health_space, 5)
+
+            if optimal_path:
+                for position in optimal_path:
+                    row, col = position
+                    pathOptimize = pg.Surface((cell_width, cell_height), pg.SRCALPHA)
+                    pg.draw.rect(pathOptimize, colorPath, (0, 0, cell_width, cell_height))
+                    screen.blit(pathOptimize, (col * cell_width, row * cell_height))
 
 
 def kirbyStatus():
@@ -356,12 +445,11 @@ def draw_background():
 
 
 screen = pg.display.set_mode(SCREENSIZE)
-pg.display.set_caption("Test Game")
+pg.display.set_caption("Kirby And The AI")
 
 done = False
 paused = False
 clock = pg.time.Clock()
-game_over = True
 
 while not done:
     for event in pg.event.get():
@@ -373,18 +461,19 @@ while not done:
                 done = True
             elif event.key == pg.K_r:
                 if paused or not kirby.alive:
-                    game_over = False
                     finished = False
                     is_imposible = False
                     reset_game()
             elif event.key == pg.K_q:
-                if not values_on and not paused:
+                if not values_on and not paused and not error_validation:
                     values_on = True
                 else:
                     values_on = False
-            elif event.key == pg.K_s:
+            elif event.key == pg.K_s and not error_validation:
                 if kirby.alive:
                     paused = not paused
+                    if paused:
+                        start_time = time.time() - auxTime
 
     if not draw_background():
         draw_background()
@@ -393,7 +482,6 @@ while not done:
         current_time = pg.time.get_ticks()
         if current_time - last_movement_time >= movement_interval:
             algorith()
-            auxTime += 1
             last_movement_time = current_time
 
         kirbyStatus()

@@ -2,6 +2,7 @@ import time
 from settings import *
 
 
+# Class Meta donde asignamos su posición y actualización
 class Goal:
     def __init__(self, x, y):
         self.x = x
@@ -12,6 +13,7 @@ class Goal:
         self.y = self.y * TITLESIZE
 
 
+# Class Kirby donde asignamos su posición, estado, vida
 class Kirby:
     def __init__(self, x, y, max_health):
         self.x = x
@@ -25,6 +27,7 @@ class Kirby:
         self.health_bar_color = (255, 192, 203)
         self.health_bar_background_color = (0, 0, 0)
 
+    # Metodo para asignar y dibujar la barra de vida del personaje
     def draw_health_bar(self, screen):
         health_percentage = max(0, self.health) / self.max_health
         bar_width = int(self.health_bar_width * health_percentage)
@@ -41,6 +44,7 @@ class Kirby:
         health_bar_rect = pg.Rect(11 * TITLESIZE, 44 * TITLESIZE, bar_width, self.health_bar_height)
         pg.draw.rect(screen, self.health_bar_color, health_bar_rect)
 
+    # Metodo para verificar si Kirby esta vivo o no
     def status(self):
         if self.alive:
             return 'ALIVE'
@@ -52,6 +56,7 @@ class Kirby:
         self.y = self.y * TITLESIZE
 
 
+# Class de la HUD, donde dibuja la interfaz
 class HUD:
     def __init__(self, x, y):
         self.image = pg.image.load("resources/sprites/HudFormatK.png")
@@ -65,6 +70,7 @@ class HUD:
         self.rect.y = self.y * TITLESIZE
 
 
+# Class Nodo
 class Node:
     def __init__(self, parent=None, position=None):
         self.parent = parent
@@ -113,7 +119,7 @@ def astar(maze, start, end, timeout=5):
             while current is not None:
                 path.append(current.position)
                 current = current.parent
-            return path[::-1]
+            return path[::-1]  # Return the reversed path
 
         children = []
         for new_position, cost in [((0, -1), 1), ((0, 1), 1), ((-1, 0), 1), ((1, 0), 1)]:
@@ -123,7 +129,7 @@ def astar(maze, start, end, timeout=5):
                     len(maze[len(maze) - 1]) - 1) or node_position[1] < 0:
                 continue
 
-            if maze[node_position[0]][node_position[1]] not in (0, 1, 4, 5):
+            if maze[node_position[0]][node_position[1]] not in (0, 1, 4, 5, 2):
                 continue
 
             new_node = Node(current_node, node_position)
@@ -144,9 +150,12 @@ def astar(maze, start, end, timeout=5):
                 children.append(new_node)
 
         for child in children:
-            child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
-                    (child.position[1] - end_node.position[1]) ** 2)
-            child.f = child.g + child.h
+            if end_node is not None:
+                child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
+                        (child.position[1] - end_node.position[1]) ** 2)
+                child.f = child.g + child.h
+            else:
+                errorValidation = True
 
         open_list.extend(children)
 
