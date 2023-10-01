@@ -4,23 +4,45 @@ import time
 import pygame as pg
 import random
 
-optimal_path = []
 
+# Creación de Variables
+# Algoritmo
+goal = Goal(goal_position[0], goal_position[1]) if goal_position is not None else None
+kirby = Kirby(kirby_position[0], kirby_position[1], 100) if kirby_position is not None else None
+algorithm_active = True
 goal_position = None
 kirby_position = None
-hud = HUD(0, 40)
-algorithm_active = True
+move_count = 0
+
+# Mapa
+
+
+# Contadores
 aCount_4 = 0
 aCount_5 = 0
-move_count = 0
+
+# Paths
+optimal_path = []
+
+# Tiempo
 auxTime = 0
+last_movement_time = pg.time.get_ticks()
+movement_interval = 500
+startTime = time.time()
+
+# HUD
+hud = HUD(0, 40)
+
+# Random
+randomBG = (random.randint(0, 9))
+
+# Booleanos (Verificadores / Validaciones).
 is_imposible = False
 finished = False
 values_on = False
 error_validation = False
 
-randomBG = (random.randint(0, 9))
-
+# Unifica los valores '1' a la meta y '2' a Kirby.
 for row_idx, row in enumerate(levelMap):
     for col_idx, value in enumerate(row):
         if value == 1:
@@ -28,28 +50,28 @@ for row_idx, row in enumerate(levelMap):
         elif value == 2:
             kirby_position = (row_idx, col_idx)
 
-goal = Goal(goal_position[0], goal_position[1]) if goal_position is not None else None
-kirby = Kirby(kirby_position[0], kirby_position[1], 100) if kirby_position is not None else None
-
+# Asignamos los valores de levelMap al dibujo de Mapa.
 mapDraw = levelMap
 
-last_movement_time = pg.time.get_ticks()
-movement_interval = 500
-
+# Posición start (posición de Kirby).
+# Posición end (posición de la Meta).
 start = (kirby.x, kirby.y)
 end = (goal.x, goal.y)
 
+# Pygame.init() inicializa.
+# Pygame.font.init() inicializa las fuentes personalizas.
 pg.init()
 pg.font.init()
 
+# Asignamos Fuentes Personalizadas.
 custom_fontP = pg.font.Font("resources/fonts/Pixel Emulator.otf", 70)
 custom_fontD = pg.font.Font("resources/fonts/Pixel Emulator.otf", 30)
 custom_font = pg.font.Font("resources/fonts/Pixel Emulator.otf", 25)
 custom_fontH = pg.font.Font("resources/fonts/Pixel Emulator.otf", 23)
 custom_fontM = pg.font.Font("resources/fonts/Pixel Emulator.otf", 15)
-startTime = time.time()
-pg.font.init()
 
+# Asignamos las Fuentes al Texto junto a sus valores y colores.
+# Pantalla Main.
 healthText = custom_fontH.render(str(kirby.health) + '/100', True, (255, 255, 255))
 statusText = custom_font.render('Status: ' + str(kirby.status()), True, (255, 255, 255))
 damageText = custom_font.render('Danger: ' + str(int(count_4 - aCount_4)), True, (255, 255, 255))
@@ -59,6 +81,7 @@ helpText = custom_fontM.render('Press "S" to Pause', True, (255, 255, 255))
 pathText = custom_fontM.render('Press "Q" to Path', True, (255, 255, 255))
 closeText = custom_fontM.render('Press "ESC" to Quit', True, (255, 255, 255))
 
+# Pantalla de Pausa.
 pauseText = custom_fontP.render('PAUSE', True, (0, 0, 255))
 descText = custom_fontD.render('Get the Goal!', True, (0, 0, 0))
 descText2 = custom_fontD.render('Beware with the Enemies!', True, (0, 0, 0))
@@ -67,10 +90,13 @@ resumeText = custom_font.render('Press "S" to Resume', True, (255, 255, 255))
 resetText = custom_font.render('Press "R" to Reset Game', True, (255, 255, 255))
 quitText = custom_font.render('Press "ESC" to Quit', True, (255, 255, 255))
 
+# Mensaje de GameOver.
 gameOverText = custom_fontP.render('GAMEOVER', True, (255, 255, 255))
 ErrorTextA = custom_font.render('Error! Something Went Wrong', True, (255, 255, 255))
 ErrorTextB = custom_font.render('Please Restart the Game', True, (255, 255, 255))
 
+# Variables auxiliares que crean los 'get_rect()' que sirven para obtener el área rectangular de la Interfaz.
+# Pantalla Main.
 healthTextR = healthText.get_rect()
 statusTextR = statusText.get_rect()
 damageTextR = damageText.get_rect()
@@ -80,6 +106,7 @@ helpTextR = helpText.get_rect()
 pathTextR = pathText.get_rect()
 closeTextR = closeText.get_rect()
 
+# Pantalla de Pausa.
 descTextR = descText.get_rect()
 descTextR2 = descText2.get_rect()
 descTextR3 = descText3.get_rect()
@@ -88,10 +115,13 @@ resumeTextR = resumeText.get_rect()
 resetTextR = resetText.get_rect()
 quitTextR = quitText.get_rect()
 
+# Pantalla de GameOver.
 gameOverTextR = gameOverText.get_rect()
 ErrorTextAR = ErrorTextA.get_rect()
 ErrorTextBR = ErrorTextB.get_rect()
 
+# Asigna las posiciones de 'x', 'y' y también centra el texto.
+# Pantalla Main.
 healthTextR.center = (260, 680)
 statusTextR.center = (575, 725)
 damageTextR.center = (695, 95)
@@ -101,6 +131,7 @@ helpTextR.center = (690, 215)
 pathTextR.center = (690, 235)
 closeTextR.center = (685, 255)
 
+# Pantalla de Pausa.
 descTextR.center = (290, 230)
 descTextR2.center = (410, 300)
 descTextR3.center = (335, 370)
@@ -109,92 +140,127 @@ resumeTextR.center = (315, 570)
 resetTextR.center = (355, 650)
 quitTextR.center = (315, 730)
 
+# Pantalla de GameOver.
 gameOverTextR.center = (WIDTH/2, HEIGHT/3)
 ErrorTextAR.center = (WIDTH/2, HEIGHT/3 - 20)
 ErrorTextBR.center = (WIDTH/2, HEIGHT/3 + 20)
 
+# Timers de Tiempo.
 timeText = custom_font.render("Time: " + str(0), True, (0, 0, 0))
 timeTextR = timeText.get_rect()
 timeTextR.center = (520, 670)
 
 
+# Método de algoritmo, donde se desencadena el proceso de buscar la meta, con el 'agente' o mejor dicho Kirby.
 def algorith():
+    # Variables globales para que tengan acceso a otras y a las mismas.
     global aCount_4, aCount_5, move_count, is_imposible, finished
     objectionMovement = False
 
+    # Variables de posición.
+    prev_kirby_position = (kirby.x, kirby.y)
+    prev_kirby_direction = None
+
+    # Si Kirby se queda sin vida el Algoritmo se detiene.
     if kirby.health == 0:
         return
 
+    # Si el algoritmo no esta activo (que es la validación para pausa), saltará al método de Pausa.
     if not algorithm_active:
         draw_pause_screen()
         return
 
-    prev_kirby_position = (kirby.x, kirby.y)
-    prev_kirby_direction = None
-
+    # Si el kirby tiene menor de 40 de vida (muere si toca otros 2 enemigos).
     if kirby.health <= 40:
+        # Crea una variable con el metodo AStar que sirve para tomar la posición de Kirby y luego tomar el mapa,
+        # para después buscar la curación más cercana posible.
         nearest_health_space = find_nearest_health_space((kirby.x, kirby.y), mapDraw)
 
+        # Esto sirve para validar y complementar la búsqueda de la vida.
         if nearest_health_space:
-            kirby_path = astar(mapDraw, (kirby.x, kirby.y), nearest_health_space, 5)
+            kirby_path = astar(mapDraw, (kirby.x, kirby.y), nearest_health_space)
 
+            # Si kirby toma la posición de los siguientes valores...
             if kirby_path:
                 next_position = kirby_path[1]
                 tile_value = mapDraw[next_position[0]][next_position[1]]
+                # Si Kirby se posiciona en los valores '5' (que son los tomatos) recibirá curaciones de 20
+                # por cada uno, y se sumará un valor a un contador que resta a la cantidad total de tomates.
                 if tile_value == 5:
                     aCount_5 += 1
                     kirby.health += 20
+                # Si Kirby se posiciona en los valores '4' (que son los enemigos 'Gordos') recibirá daño de 20
+                # por cada uno, y se sumará un valor a un contador que resta a la cantidad total de gordos.
                 if tile_value == 4:
                     aCount_4 += 1
                     kirby.health -= 20
+                # En el valor '1' (que es el cofre/meta), sólo puede generarse y existir uno,
+                # cuando Kirby llega a la posición de este, se cambia una variable para otro método.
                 if tile_value == 1:
                     mapDraw[goal.x][goal.y] = 0
-                    finished
+                    finished = True
                     return
+                # el nodo anterior se 'vacía' y el siguiente se reemplaza con '2' que es el valor de Kirby.
                 mapDraw[kirby.x][kirby.y] = 0
                 kirby.x, kirby.y = next_position
                 mapDraw[kirby.x][kirby.y] = 2
                 return
 
+    # Si kirby no esta en la meta, y el algoritmo esta activo, se activa y crea el algoritmo estrella en el laberinto.
     if (kirby.x, kirby.y) != (goal.x, goal.y) and algorithm_active:
-        maze = astar(mapDraw, (kirby.x, kirby.y), (goal.x, goal.y), 5)
+        maze = astar(mapDraw, (kirby.x, kirby.y), (goal.x, goal.y))
 
+        # Si se generó el laberinto, dibujara el mapa con valores de '0' sin sobreescribir la generación del mapa
+        # con los valores secundarios, como la meta, kirby, los gordos y tomates.
         if maze:
             mapDraw[kirby.x][kirby.y] = 0
 
+            # Si Kirby toma la posición de la meta, se pone por encima de este, ambos son 'eliminados' y se coloca como
+            # verdadero la variable 'finished'.
             if maze[1][0] == goal.x and maze[1][1] == goal.y:
                 mapDraw[maze[1][0]][maze[1][1]] = 0
                 objectionMovement = True
                 finished = True
+            # Si Kirby toma la posición de la mina, se pone por encima de este, la mina es eliminada, y Kirby pierde 20
+            # de vida, seguido de que el contador aumenta para restar esa mina como si fuese consumida.
             elif mapDraw[maze[1][0]][maze[1][1]] == 4:
                 mapDraw[maze[1][0]][maze[1][1]] = 0
                 kirby.health -= 20
                 aCount_4 += 1
                 objectionMovement = True
+            # Si Kirby toma la posición del tomate, se pone por encima de este, el tomate es eliminado, y Kirby restaura
+            # 20 de vida, seguido de que el contador para restar ese tomato como si fuese consumido.
             elif mapDraw[maze[1][0]][maze[1][1]] == 5:
                 mapDraw[maze[1][0]][maze[1][1]] = 0
                 kirby.health += 20
                 aCount_5 += 1
                 objectionMovement = True
+            # Si Kirby sigue en el laberinto será representado como '2' y será dibujado como tal.
             else:
                 kirby.x = maze[1][0]
                 kirby.y = maze[1][1]
                 mapDraw[kirby.x][kirby.y] = 2
 
+                # Validación para que en teoria Kirby no regrese a la posición y haga un loop infinito.
                 if (kirby.x, kirby.y) == prev_kirby_position and (kirby.x, kirby.y) != prev_kirby_direction:
                     prev_kirby_direction = (kirby.x, kirby.y)
                 else:
                     prev_kirby_direction = None
 
+                # Si el contador de movimiento es menor que 100 y kirby se mueve, estará sumando + 1.
                 if move_count < 100 and prev_kirby_direction is None:
                     move_count += 1
 
+    # Si el Path no encuentra una forma de crear el camino entre Kirby y la Meta, se genera una variable Bool
+    # llamada 'is_imposible' que saltará a otro método.
     if (kirby.x, kirby.y) == prev_kirby_position and not objectionMovement:
         is_imposible = True
         return
 
 
+# Método para encontrar la zona de curación mas cercana utilizando el algoritmo estrella.
 def find_nearest_health_space(start_position, mapDraw):
+    # Código del AStar pero resumido y abreviado solo para curaciones.
     open_list = []
     closed_set = set()
 
@@ -225,9 +291,11 @@ def find_nearest_health_space(start_position, mapDraw):
     return None
 
 
+# Método de pausa, cuando se presiona la tecla 's', la pantalla es cambiada y mostrará nuevos valores de texto.
 def draw_pause_screen():
     screen.blit(BGPAUSE, (0, 0))
 
+    # Texto de descripción.
     descText = custom_fontD.render('Get the Goal!', True, (0, 0, 0))
     descText2 = custom_fontD.render('Beware with the Enemies!', True, (0, 0, 0))
     descText3 = custom_fontD.render('Eat food to heal!', True, (0, 0, 0))
@@ -236,6 +304,7 @@ def draw_pause_screen():
     resetText = custom_font.render('Press "R" to Reset', True, (255, 255, 255))
     quitText = custom_font.render('Press "ESC" to Quit', True, (255, 255, 255))
 
+    # Dibuja los textos en la pantalla.
     screen.blit(pauseText, pauseTextR)
     screen.blit(resumeText, resumeTextR)
     screen.blit(resetText, resetTextR)
@@ -245,17 +314,26 @@ def draw_pause_screen():
     screen.blit(descText3, descTextR3)
 
 
+# Método de Reinicio de juego.
 def reset_game():
     global algorithm_active
     global goal
     global kirby
     global mapDraw
     global levelMap
+    global move_count
+    global aCount_4
+    global aCount_5
+
+    aCount_4 = 0
+    aCount_5 = 0
 
     algorithm_active = True
 
     rows = 10
     columns = 10
+
+    move_count = 0
 
     levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
 
@@ -383,7 +461,7 @@ def drawUI():
         else:
             nearest_health_space = find_nearest_health_space((kirby.x, kirby.y), mapDraw)
 
-            optimal_path = astar(mapDraw, (kirby.x, kirby.y), nearest_health_space, 5)
+            optimal_path = astar(mapDraw, (kirby.x, kirby.y), nearest_health_space)
 
             if optimal_path:
                 for position in optimal_path:
