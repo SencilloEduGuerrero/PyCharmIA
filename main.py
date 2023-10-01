@@ -539,6 +539,7 @@ def draw_background():
     levelTextR.center = (695, 45)
     screen.blit(levelText, levelTextR)
 
+
 # La pantalla activa el modo display del tamaño de la pantalla y le da nombre al proyecto.
 screen = pg.display.set_mode(SCREENSIZE)
 pg.display.set_caption("Kirby And The AI")
