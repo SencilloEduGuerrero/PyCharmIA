@@ -14,9 +14,6 @@ goal_position = None
 kirby_position = None
 move_count = 0
 
-# Mapa
-
-
 # Contadores
 aCount_4 = 0
 aCount_5 = 0
@@ -41,6 +38,8 @@ is_imposible = False
 finished = False
 values_on = False
 error_validation = False
+done = False
+paused = False
 
 # Unifica los valores '1' a la meta y '2' a Kirby.
 for row_idx, row in enumerate(levelMap):
@@ -316,6 +315,8 @@ def draw_pause_screen():
 
 # Método de Reinicio de juego.
 def reset_game():
+    # Variables globales para tener acceso a ellas, esta parte del código se podría optimizar, pero por cuestiones de
+    # tiempo lo dejare así temporalmente.
     global algorithm_active
     global goal
     global kirby
@@ -325,18 +326,17 @@ def reset_game():
     global aCount_4
     global aCount_5
 
+    # Variables Contadores.
     aCount_4 = 0
     aCount_5 = 0
-
-    algorithm_active = True
-
-    rows = 10
-    columns = 10
-
     move_count = 0
+
+    # Variables Asignación.
+    algorithm_active = True
 
     levelMap = [[0 for _ in range(columns)] for _ in range(rows)]
 
+    # Variables para el Mapa.
     max_obstacles = 35
     min_distance = 4
     max_distance = 8
@@ -345,6 +345,7 @@ def reset_game():
     count_4 = 0
     count_5 = 0
 
+    # Se le asigna una posición aleatoria a la meta, a kirby, y se redibuja todo el mapa con todos sus elementos.
     goal_position = (random.randint(0, rows - 1), random.randint(0, columns - 1))
 
     while True:
@@ -373,19 +374,26 @@ def reset_game():
                 levelMap[row][column] = 3
                 break
 
+    # Actualiza el mapa, meta y kirby.
     mapDraw = levelMap
     goal = Goal(goal_position[0], goal_position[1])
     kirby = Kirby(kirby_position[0], kirby_position[1], 100)
 
 
+# Dibuja el UI que serían los textos en pantalla.
 def drawUI():
+    # Variables de tiempo
     endTime = time.time()
     auxTime = endTime - startTime
+
+    # Variable para asignar el camino del path un color transaparente.
     colorPath = pg.Color(0, 255, 0, 50)
 
+    # Validación de que la variable tiempo no exceda 100 y se quede en 99, ya que el int del tiempo es demasiado grande.
     if auxTime > 100:
         auxTime = 99
 
+    # Asigna los textos personalizados.
     timeText = custom_font.render("Time: " + str(int(auxTime)), True, (0, 0, 0))
     healthText = custom_fontH.render(str(kirby.health) + "/100", True, (255, 0, 0))
     statusText = custom_font.render("Status: " + str(kirby.status()), True, (0, 0, 0))
@@ -396,6 +404,7 @@ def drawUI():
     pathText = custom_fontM.render('Press "Q" to Path', True, (255, 255, 255))
     closeText = custom_fontM.render('Press "ESC" to Close', True, (255, 255, 255))
 
+    # Dibuja los textos y los muestra en la pantalla.
     screen.blit(timeText, timeTextR)
     screen.blit(statusText, statusTextR)
     screen.blit(healthText, healthTextR)
@@ -406,17 +415,19 @@ def drawUI():
     screen.blit(pathText, pathTextR)
     screen.blit(closeText, closeTextR)
 
+    # Doble validación el primero es para no mostrar los mensajes cuando se entre al modo 'draw_path'.
     if not values_on:
+        # Validación cuando Kirby no tenga vida o sea imposible llegar al cofre, muestre un mensaje de 'GAMEOVER'.
         if kirby.health == 0 or is_imposible:
             pg.draw.rect(screen, BLACK, pg.Rect(170, 200, 450, 150))
             gameOverText = custom_fontP.render('GAMEOVER', True, (255, 255, 255))
             screen.blit(gameOverText, gameOverTextR)
-
+        # Validación cuando Kirby llegue a la meta, mostrar un mensaje de 'FINISHED'.
         if finished:
             pg.draw.rect(screen, BLACK, pg.Rect(170, 200, 490, 150))
             gameOverText = custom_fontP.render('FINISHED!', True, (255, 255, 255))
             screen.blit(gameOverText, gameOverTextR)
-
+    # Mensaje de validación por si sucede algun error, como que no se genere correctamente un Nodo, el path, etc.
     if error_validation:
         pg.draw.rect(screen, BLACK, pg.Rect(50, 200, 700, 150))
         ErrorTextA = custom_font.render('Error: Something Went Wrong', True, (255, 255, 255))
@@ -424,6 +435,7 @@ def drawUI():
         screen.blit(ErrorTextA, ErrorTextAR)
         screen.blit(ErrorTextB, ErrorTextBR)
 
+    # Si esta activado esto, mostrará los costos y el path el cual se actualiza a los cofres y tomates.
     if values_on:
         cell_width = 58
         cell_height = 58
@@ -448,6 +460,7 @@ def drawUI():
         start = (kirby.x, kirby.y)
         end = (goal.x, goal.y)
 
+        # Validación de que muestre el camino optimo cuando es cofre.
         if not kirby.health <= 40:
             optimal_path = astar(mapDraw, (start), end)
 
@@ -459,6 +472,7 @@ def drawUI():
                     screen.blit(pathOptimize, (col * cell_width, row * cell_height))
 
         else:
+            # Si Kirby tiene poca vida, mostrara el camino hacia el tomate mas cercano.
             nearest_health_space = find_nearest_health_space((kirby.x, kirby.y), mapDraw)
 
             optimal_path = astar(mapDraw, (kirby.x, kirby.y), nearest_health_space)
@@ -471,19 +485,23 @@ def drawUI():
                     screen.blit(pathOptimize, (col * cell_width, row * cell_height))
 
 
+# Método que muestra si kirby esta vivo.
 def kirbyStatus():
     if kirby.health <= 0:
         kirby.health = 0
         kirby.alive = False
         screen.fill(BLACK)
 
+    # Validación de que Kirby no pueda recibir mas vida si ya tiene la vida al 100.
     if kirby.health >= 100:
         kirby.health = 100
 
 
+# Método que dibuja el fondo y da "biomas"
 def draw_background():
     levelName = "Empty"
 
+    # Asigna el bioma y también le da su respectivo nombre.
     match randomBG:
         case 0:
             levelName = "Moon"
@@ -521,77 +539,94 @@ def draw_background():
     levelTextR.center = (695, 45)
     screen.blit(levelText, levelTextR)
 
-
+# La pantalla activa el modo display del tamaño de la pantalla y le da nombre al proyecto.
 screen = pg.display.set_mode(SCREENSIZE)
 pg.display.set_caption("Kirby And The AI")
 
-done = False
-paused = False
+# Asigna el time.clock.
 clock = pg.time.Clock()
 
+# Cuando se ejecuta el proyecto...
 while not done:
     for event in pg.event.get():
         keys = pg.key.get_pressed()
         if event.type == pg.QUIT:
             done = True
         if event.type == pg.KEYDOWN:
+            # SI se presiona ESC, cerrará el proyecto.
             if event.key == pg.K_ESCAPE:
                 done = True
+            # SI se presiona 'R', mientras este pausado, ubicará todo como el metodo
             elif event.key == pg.K_r:
                 if paused or not kirby.alive:
                     finished = False
                     is_imposible = False
                     reset_game()
+            # Si se presiona 'Q' mostrará el camino mientras no este pausado y no haya un error.
             elif event.key == pg.K_q:
                 if not values_on and not paused and not error_validation:
                     values_on = True
                 else:
                     values_on = False
+            # Si se presiona 'S' y no hay error de validación pausará y podrá reiniciar.
             elif event.key == pg.K_s and not error_validation:
                 if kirby.alive:
                     paused = not paused
                     if paused:
                         start_time = time.time() - auxTime
 
+    # Validación por si no dibujo el fondo, lo dibuje.
     if not draw_background():
         draw_background()
 
+    # Validación de que si no esta pausado, funcione el algoritmo y el tiempo.
     if not paused:
         current_time = pg.time.get_ticks()
         if current_time - last_movement_time >= movement_interval:
             algorith()
             last_movement_time = current_time
 
+        # Toma el estado de Kirby.
         kirbyStatus()
 
+        # Dibuja la barra de vida de Kirby en la pantalla.
         kirby.draw_health_bar(screen)
+        # Dibuja y actualiza el HUD.
         hud.update()
         screen.blit(hud.image, (hud.rect.x, hud.rect.y))
 
+        # Es una matriz donde se le asignan las texturas a los valores y los cuadros de fondo.
         for row in range(10):
             for column in range(10):
                 texture = None
                 color = pg.Color(255, 255, 255, 25)
 
+                # Dibuja la textura del cofre para la 'meta'.
                 if mapDraw[row][column] == 1:
                     texture = pg.image.load("resources/sprites/goal.png").convert_alpha()
                     texture = pg.transform.scale(texture, (52, 52))
+                # Dibuja la textura de Kirby como el 'agente'.
                 elif mapDraw[row][column] == 2:
                     texture = pg.image.load("resources/sprites/kirbySpriteD.png").convert_alpha()
                     texture = pg.transform.scale(texture, (52, 52))
+                    # Si Kirby tiene 0 de vida, mostrará una imagen de Kirby dañado.
                     if kirby.health == 0:
                         texture = pg.image.load("resources/sprites/KirbyDamage.png").convert_alpha()
                         texture = pg.transform.scale(texture, (52, 52))
+                # Dibuja la textura de la pared como 'obstaculo'.
                 elif mapDraw[row][column] == 3:
                     texture = pg.image.load("resources/sprites/wallSprite.png").convert_alpha()
                     texture = pg.transform.scale(texture, (52, 52))
+                # Dibuja la textura de Gordo como 'mina'.
                 elif mapDraw[row][column] == 4:
                     texture = pg.image.load("resources/sprites/damageS.png").convert_alpha()
                     texture = pg.transform.scale(texture, (52, 52))
+                # Dibuja la textura del Tomate como 'curación'.
                 elif mapDraw[row][column] == 5:
                     texture = pg.image.load("resources/sprites/food.png").convert_alpha()
                     texture = pg.transform.scale(texture, (52, 52))
 
+                # Si la textura no es vacía, la mostrará en la pantalla, asignando su tamaño valor y rectángulo.
                 if texture is not None:
                     screen.blit(texture, ((MARGIN + GRIDWIDTH) * column + MARGIN, (MARGIN + GRIDHEIGHT) * row + MARGIN))
 
@@ -601,12 +636,13 @@ while not done:
                 screen.blit(rect_surface, ((MARGIN + GRIDWIDTH) * column + MARGIN,
                                            (MARGIN + GRIDHEIGHT) * row + MARGIN))
 
+        # Dibuja toda la interfaz de mensajes.
         drawUI()
         clock.tick(30)
-
+    # Si se pausa, mostrará la pantalla de pausa.
     else:
         draw_pause_screen()
-
+    # Actualiza cambios.
     pg.display.flip()
 
 pg.quit()
